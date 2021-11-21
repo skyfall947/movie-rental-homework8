@@ -17,7 +17,10 @@ export class CustomersService implements CRUD {
 
   async insertOne(createCustomerDto: CreateCustomerDto) {
     try {
-      const customer = this.customerRepository.create(createCustomerDto);
+      const customer = this.customerRepository.create({
+        ...createCustomerDto,
+        isAdmin: false,
+      });
       return await customer.save();
     } catch (error) {
       throw new BadRequestException(error.detail || error.message);
@@ -42,7 +45,7 @@ export class CustomersService implements CRUD {
   ): Promise<Customer> {
     try {
       const customer = await this.customerRepository.preload({
-        custormerId: id,
+        customerId: id,
         ...updateCustomerDto,
       });
       return await this.customerRepository.save(customer);
@@ -64,5 +67,9 @@ export class CustomersService implements CRUD {
 
   async removeAll(): Promise<void> {
     return await this.customerRepository.clear();
+  }
+
+  async getOneByEmail(email: string): Promise<Customer> {
+    return await this.customerRepository.findOne({ email });
   }
 }

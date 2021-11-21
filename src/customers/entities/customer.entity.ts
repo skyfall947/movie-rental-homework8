@@ -11,7 +11,7 @@ import {
 @Entity()
 export class Customer extends BaseEntity {
   @PrimaryGeneratedColumn()
-  custormerId: number;
+  customerId: number;
 
   @Column()
   fullName: string;
@@ -32,6 +32,9 @@ export class Customer extends BaseEntity {
     },
   })
   password: string;
+
+  @Column({ default: false })
+  isAdmin: boolean;
 
   @CreateDateColumn()
   createdAt: Date;
