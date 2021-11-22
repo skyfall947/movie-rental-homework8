@@ -11,12 +11,17 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async validateSubject(email: string, password: string) {
+  async validateSubject(email: string, password: string): Promise<JwtUserDto> {
     const subject = await this.customersService.getOneByEmail(email);
     if (!subject) return null;
     const isMatch = await bcrypt.compare(password, subject.password);
     if (!isMatch) return null;
-    return { id: subject.customerId, email: subject.email };
+
+    return {
+      id: subject.customerId,
+      email: subject.email,
+      isAdmin: subject.isAdmin,
+    };
   }
 
   login(user: JwtUserDto) {

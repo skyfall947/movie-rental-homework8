@@ -1,14 +1,13 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { CustomersModule } from './customers/customers.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { CustomersModule } from './customers/customers.module';
 import { AuthModule } from './auth/auth.module';
+import { MoviesModule } from './movies/movies.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
-    CustomersModule,
-    AuthModule,
     TypeOrmModule.forRootAsync({
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => ({
@@ -24,7 +23,9 @@ import { AuthModule } from './auth/auth.module';
         synchronize: true,
       }),
     }),
+    CustomersModule,
+    AuthModule,
+    MoviesModule,
   ],
-  providers: [],
 })
 export class AppModule {}
