@@ -6,12 +6,12 @@ import {
   mockCustomerPatch,
   mockCustomerPut,
   mockCustomersCreate,
-} from './mock';
+} from './mocks/customers-mock';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Customer } from '../src/customers/entities/customer.entity';
 import { CustomersModule } from '../src/customers/customers.module';
 
-describe('AppController (e2e)', () => {
+describe('CustomerController (e2e)', () => {
   let app: INestApplication;
   let customerId;
 
@@ -38,6 +38,8 @@ describe('AppController (e2e)', () => {
   });
 
   afterAll(async () => {
+    // clear all and add an admin
+    await request(app.getHttpServer()).delete('/customers');
     // create dumb data on movies_test
     await Promise.all(
       mockCustomersCreate.map((customer) => {
@@ -74,6 +76,38 @@ describe('AppController (e2e)', () => {
       expect(newCustomer.email).toBe(mockCustomersCreate[0].email);
     });
 
+    it('/customers (GET) OK 3 customers on DB', async () => {
+      const response = await request(app.getHttpServer())
+        .get('/customers')
+        .expect(HttpStatus.OK);
+      expect(response.body).toHaveLength(3);
+    });
+
+    it('/customers (PUT)', async () => {
+      const response = await request(app.getHttpServer())
+        .put(`/customers/${customerId}`)
+        .send(mockCustomerPut)
+        .expect(HttpStatus.OK);
+      const updatedCustomer = response.body;
+      expect(updatedCustomer.email).toBe(mockCustomerPut.email);
+      expect(updatedCustomer.fullName).toBe(mockCustomerPut.fullName);
+    });
+
+    it('/customers (PATCH)', async () => {
+      const response = await request(app.getHttpServer())
+        .patch(`/customers/${customerId}`)
+        .send(mockCustomerPatch)
+        .expect(HttpStatus.OK);
+      const updatedCustomer = response.body;
+      expect(updatedCustomer.email).toBe(mockCustomerPatch.email);
+    });
+
+    it('/customers (DELETE)', async () => {
+      await request(app.getHttpServer())
+        .delete(`/customers/${customerId}`)
+        .expect(HttpStatus.NO_CONTENT);
+    });
+
     it('/customers (GET) OK 2 customers on DB', async () => {
       const response = await request(app.getHttpServer())
         .get('/customers')
@@ -81,38 +115,4 @@ describe('AppController (e2e)', () => {
       expect(response.body).toHaveLength(2);
     });
   });
-
-  it('/customers (PUT)', async () => {
-    const response = await request(app.getHttpServer())
-      .put(`/customers/${customerId}`)
-      .send(mockCustomerPut)
-      .expect(HttpStatus.OK);
-    const updatedCustomer = response.body;
-    expect(updatedCustomer.email).toBe(mockCustomerPut.email);
-    expect(updatedCustomer.fullName).toBe(mockCustomerPut.fullName);
-  });
-
-  it('/customers (PATCH)', async () => {
-    const response = await request(app.getHttpServer())
-      .patch(`/customers/${customerId}`)
-      .send(mockCustomerPatch)
-      .expect(HttpStatus.OK);
-    const updatedCustomer = response.body;
-    expect(updatedCustomer.email).toBe(mockCustomerPatch.email);
-  });
-
-  it('/customers (DELETE)', async () => {
-    await request(app.getHttpServer())
-      .delete(`/customers/${customerId}`)
-      .expect(HttpStatus.NO_CONTENT);
-  });
-
-  it('/customers (GET) OK 1 customers on DB', async () => {
-    const response = await request(app.getHttpServer())
-      .get('/customers')
-      .expect(HttpStatus.OK);
-    expect(response.body).toHaveLength(1);
-  });
 });
-
-//it('', async()=> {})

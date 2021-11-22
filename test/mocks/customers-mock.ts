@@ -53,14 +53,9 @@ export const mockCustomer: CustomerDto = {
   isAdmin: false,
 };
 
-export const mockAdmin = {
-  customerId: 0,
-  fullName: 'Admin',
+export const mockAdminLogin = {
   email: 'admin@gmail.com',
-  password: '$2b$10$FrJQHyQ96V3CRRespfrtRe6pE8I.65CJOyMnMqz1IPqA8rUZpJwua',
-  createdAt: new Date('2021-11-20 18:51:09.48526'),
-  updatedAt: new Date('2021-11-20 18:51:09.48526'),
-  isAdmin: true,
+  password: 'Aa1####',
 };
 
 // ====== Mock to create on DB ======

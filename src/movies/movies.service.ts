@@ -72,7 +72,8 @@ export class MoviesService implements CRUD {
   }
 
   async removeAll(): Promise<void> {
-    return await this.movieRepository.clear();
+    const movies = await this.getAll(false);
+    await this.movieRepository.remove(movies);
   }
 
   async rentMovie(movieId: number, customerId: number) {
