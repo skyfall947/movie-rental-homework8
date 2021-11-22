@@ -19,7 +19,10 @@ import { TagsModule } from './tags/tags.module';
         ),
         username: configService.get<string>('POSTGRES_USER'),
         password: configService.get<string>('POSTGRES_PASSWORD'),
-        database: configService.get<string>('POSTGRES_DATABASE'),
+        database:
+          configService.get<string>('NODE_ENV') == 'test-api'
+            ? configService.get<string>('POSTGRES_DATABASE_TEST')
+            : configService.get<string>('POSTGRES_DATABASE'),
         autoLoadEntities: true,
         synchronize: true,
       }),

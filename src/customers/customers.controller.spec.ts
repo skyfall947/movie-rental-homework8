@@ -3,7 +3,7 @@ import {
   mockCustomer,
   mockCustomerCreate,
   mockCustomers,
-} from '../../test/modules/customers/mock';
+} from '../../test/mock';
 import { CustomersController } from './customers.controller';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';

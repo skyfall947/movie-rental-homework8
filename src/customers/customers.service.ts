@@ -72,7 +72,8 @@ export class CustomersService implements CRUD {
   }
 
   async removeAll(): Promise<void> {
-    return await this.customerRepository.clear();
+    const customers = await this.getAll(false);
+    await this.customerRepository.remove(customers);
   }
 
   async getOneByEmail(email: string): Promise<Customer> {
