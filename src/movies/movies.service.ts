@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UseGuards } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CRUD } from 'src/common/interfaces/crud.interface';
 import { Repository } from 'typeorm';
@@ -6,6 +6,11 @@ import { CreateMovieDto } from './dto/create-movie.dto';
 import { PatchMovieDto } from './dto/patch-movie.dto';
 import { Movie } from './entities/movie.entity';
 import { CustomersService } from 'src/customers/customers.service';
+import { TagsService } from 'src/tags/tags.service';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
+import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
+import { Role } from 'src/auth/role.enum';
 
 @Injectable()
 export class MoviesService implements CRUD {
@@ -13,6 +18,7 @@ export class MoviesService implements CRUD {
     @InjectRepository(Movie)
     private readonly movieRepository: Repository<Movie>,
     private readonly customerService: CustomersService,
+    private readonly tagsService: TagsService,
   ) {}
   async insertOne(createMovieDto: CreateMovieDto): Promise<Movie> {
     try {
@@ -24,10 +30,13 @@ export class MoviesService implements CRUD {
   }
 
   async findOne(id: number): Promise<Movie> {
-    return await this.movieRepository.findOne({
-      movieId: id,
-      availability: true,
-    });
+    return await this.movieRepository.findOne(
+      {
+        movieId: id,
+        availability: true,
+      },
+      { relations: ['tags'] },
+    );
   }
 
   async getAll(sorted = false, perPage = 10, page = 1): Promise<Movie[]> {
@@ -120,6 +129,22 @@ export class MoviesService implements CRUD {
       movie.stock = movie.stock - 1 <= 0 ? 0 : movie.stock - 1;
       if (movie.stock == 0) movie.availability = false;
       return await this.movieRepository.save(movie);
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  async tagMovie(movieId: number, tagId: number) {
+    try {
+      const movie = await this.movieRepository.findOneOrFail(movieId, {
+        relations: ['tags'],
+      });
+      const tag = await this.tagsService.findOne(tagId);
+      movie.tags = [...movie.tags, tag];
+      await movie.save();
+      return this.findOne(movieId);
     } catch (error) {
       throw new BadRequestException(error.message);
     }

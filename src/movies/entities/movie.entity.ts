@@ -1,4 +1,5 @@
 import { Customer } from 'src/customers/entities/customer.entity';
+import { Tag } from 'src/tags/entities/tag.entity';
 import {
   BaseEntity,
   Column,
@@ -42,4 +43,8 @@ export class Movie extends BaseEntity {
   @ManyToMany(() => Customer)
   @JoinTable()
   buyers: Customer[];
+
+  @ManyToMany(() => Tag)
+  @JoinTable()
+  tags: Tag[];
 }

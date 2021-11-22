@@ -94,4 +94,12 @@ export class MoviesController {
   async removeAll(): Promise<void> {
     return await this.moviesService.removeAll();
   }
+
+  @Post(':movieId/tags/:tagId')
+  tagMovie(
+    @Param('tagId', ParseIntPipe) tagId: number,
+    @Param('movieId', ParseIntPipe) movieId: number,
+  ) {
+    return this.moviesService.tagMovie(movieId, tagId);
+  }
 }
