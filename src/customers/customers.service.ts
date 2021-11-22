@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -21,7 +25,8 @@ export class CustomersService implements CRUD {
         ...createCustomerDto,
         isAdmin: false,
       });
-      return await customer.save();
+      await customer.save();
+      return this.findOne(customer.customerId);
     } catch (error) {
       throw new BadRequestException(error.detail || error.message);
     }
@@ -48,7 +53,8 @@ export class CustomersService implements CRUD {
         customerId: id,
         ...updateCustomerDto,
       });
-      return await this.customerRepository.save(customer);
+      await customer.save();
+      return this.findOne(id);
     } catch (error) {
       throw new BadRequestException(
         error.detail || 'A customer with the id provided not exist',
@@ -70,6 +76,8 @@ export class CustomersService implements CRUD {
   }
 
   async getOneByEmail(email: string): Promise<Customer> {
-    return await this.customerRepository.findOne({ email });
+    const customer = await Customer.findByEmail(email);
+    if (!customer) throw new NotFoundException(`User with ${email} not found`);
+    return customer;
   }
 }

@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import {
   IsEmail,
   IsString,
@@ -20,4 +21,5 @@ export class CustomerDto {
   password: string;
   createdAt: Date;
   updatedAt: Date;
+  isAdmin: boolean;
 }

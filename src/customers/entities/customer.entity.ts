@@ -1,6 +1,8 @@
-import { hashSync } from 'bcrypt';
+import * as bcrypt from 'bcrypt';
 import {
   BaseEntity,
+  BeforeInsert,
+  BeforeUpdate,
   Column,
   CreateDateColumn,
   Entity,
@@ -21,16 +23,7 @@ export class Customer extends BaseEntity {
   })
   email: string;
 
-  @Column({
-    transformer: {
-      to(password: string): string {
-        return hashSync(password, 10);
-      },
-      from(hash: string): string {
-        return hash;
-      },
-    },
-  })
+  @Column({ select: false })
   password: string;
 
   @Column({ default: false })
@@ -41,4 +34,25 @@ export class Customer extends BaseEntity {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  static findByEmail(email: string) {
+    return Customer.createQueryBuilder()
+      .select(['Customer.email', 'Customer.customerId'])
+      .addSelect('Customer.password')
+      .where('Customer.email = :email', { email })
+      .getOne();
+  }
+
+  @BeforeInsert()
+  async setPassword(password: string) {
+    const salt = await bcrypt.genSalt();
+    this.password = await bcrypt.hash(password || this.password, salt);
+  }
+
+  @BeforeUpdate()
+  async setPasswordUpdated(password: string) {
+    if (!this.password) return;
+    const salt = await bcrypt.genSalt();
+    this.password = await bcrypt.hash(password || this.password, salt);
+  }
 }
