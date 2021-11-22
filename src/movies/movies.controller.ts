@@ -10,6 +10,9 @@ import {
   UseGuards,
   Query,
   ParseBoolPipe,
+  UseInterceptors,
+  UploadedFile,
+  Res,
 } from '@nestjs/common';
 import { MoviesService } from './movies.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
@@ -20,6 +23,9 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { Roles } from 'src/auth/roles.decorator';
 import { Role } from 'src/auth/role.enum';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { editFileName, imageFileFilter } from 'src/common/utils/image-utils';
 
 @Controller('movies')
 export class MoviesController {
@@ -37,7 +43,6 @@ export class MoviesController {
     return this.moviesService.getAll(sorted);
   }
 
-  //TODO: get only available
   @Get(':id')
   findOne(@Param('id', ParseIntPipe) id: number): Promise<Movie> {
     return this.moviesService.findOne(id);
@@ -58,6 +63,31 @@ export class MoviesController {
   @Delete(':id')
   remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
     return this.moviesService.removeOne(id);
+  }
+
+  @Post(':id/upload-poster')
+  @UseInterceptors(
+    FileInterceptor('poster', {
+      storage: diskStorage({
+        destination: './posters',
+        filename: editFileName,
+      }),
+      fileFilter: imageFileFilter,
+    }),
+  )
+  async uploadPoster(
+    @UploadedFile() file: Express.Multer.File,
+    @Param('id', ParseIntPipe) movieId: number,
+  ) {
+    console.log(file);
+    return await this.moviesService.updateOne(movieId, {
+      posterUrl: file.filename,
+    });
+  }
+
+  @Get('poster/:img')
+  async getPoster(@Param('img') img: string, @Res() res) {
+    return res.sendFile(img, { root: './posters' });
   }
 
   @Delete()

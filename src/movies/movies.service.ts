@@ -4,6 +4,7 @@ import { CRUD } from 'src/common/interfaces/crud.interface';
 import { Repository } from 'typeorm';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { PatchMovieDto } from './dto/patch-movie.dto';
+import { Customer } from 'src/customers/entities/customer.entity';
 import { Movie } from './entities/movie.entity';
 
 @Injectable()
@@ -61,5 +62,38 @@ export class MoviesService implements CRUD {
 
   async removeAll(): Promise<void> {
     return await this.movieRepository.clear();
+  }
+
+  async disableMovieAndAddCustomer(
+    id: number,
+    customer: Customer,
+  ): Promise<Movie> {
+    try {
+      const movie = await this.movieRepository.findOneOrFail(id);
+      if (movie.availability == false)
+        throw new Error('This movie is not available');
+      movie.availability = false;
+      movie.customer = customer;
+      return await movie.save();
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async enableMovieAndRemoveCustomer(movieId: number, customerId: number) {
+    try {
+      const movie = await this.movieRepository.findOneOrFail(
+        { movieId },
+        { relations: ['customer'] },
+      );
+      if (!movie.customer) throw new Error('This movie is not rented');
+      if (movie.customer.customerId !== customerId)
+        throw Error('The actual customer not rented this movie');
+      movie.availability = true;
+      movie.customer = null;
+      await movie.save();
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 }

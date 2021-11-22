@@ -1,8 +1,11 @@
+import { Customer } from 'src/customers/entities/customer.entity';
 import {
   BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
+  JoinColumn,
+  ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -11,12 +14,12 @@ import {
 export class Movie extends BaseEntity {
   @PrimaryGeneratedColumn()
   movieId: number;
-  @Column({ unique: true })
+  @Column()
   title: string;
   @Column()
   description: string;
   @Column({ default: 'NO_DEFINED' })
-  posterUrl: string;
+  poster: string;
   @Column()
   trailerUrl: string;
   @Column()
@@ -29,4 +32,8 @@ export class Movie extends BaseEntity {
   createdAt: Date;
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @ManyToOne(() => Customer)
+  @JoinColumn()
+  customer: Customer;
 }

@@ -4,14 +4,18 @@ import { IsBoolean, IsNotEmpty, IsNumber } from 'class-validator';
 export class PatchMovieDto {
   @Expose()
   @IsNotEmpty()
-  title: string;
+  title?: string;
   @Expose()
   @IsNotEmpty()
   description?: string;
   @Expose()
   @IsNotEmpty()
   @IsNumber()
-  price: number;
+  price?: number;
+  @Expose()
   @IsBoolean()
-  availability: boolean;
+  availability?: boolean;
+  @Expose()
+  @IsNotEmpty()
+  posterUrl?: string;
 }
