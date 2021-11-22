@@ -1,12 +1,9 @@
 import { hashSync } from 'bcrypt';
-import { Movie } from 'src/movies/entities/movie.entity';
 import {
   BaseEntity,
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
-  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
