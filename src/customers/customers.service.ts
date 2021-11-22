@@ -52,6 +52,7 @@ export class CustomersService implements CRUD {
       const customer = await this.customerRepository.preload({
         customerId: id,
         ...updateCustomerDto,
+        isAdmin: false,
       });
       await customer.save();
       return this.findOne(id);
