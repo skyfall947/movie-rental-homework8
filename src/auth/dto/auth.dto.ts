@@ -1,4 +1,5 @@
 import { IsInt, IsNotEmpty } from 'class-validator';
+import { Role } from '../role.enum';
 
 export class JwtUserDto {
   @IsInt()
@@ -6,7 +7,7 @@ export class JwtUserDto {
   @IsNotEmpty()
   email: string;
   @IsNotEmpty()
-  isAdmin: boolean;
+  roles: Role[];
 }
 
 export const LoginUserDto = {

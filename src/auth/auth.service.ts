@@ -3,6 +3,7 @@ import { CustomersService } from 'src/customers/customers.service';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { JwtUserDto } from './dto/auth.dto';
+import { Role } from './role.enum';
 
 @Injectable()
 export class AuthService {
@@ -20,7 +21,7 @@ export class AuthService {
     return {
       id: subject.customerId,
       email: subject.email,
-      isAdmin: subject.isAdmin,
+      roles: [subject.isAdmin ? Role.Admin : Role.User],
     };
   }
 
@@ -29,7 +30,7 @@ export class AuthService {
       access_token: this.jwtService.sign({
         email: user.email,
         sub: user.id,
-        isAdmin: user.isAdmin,
+        roles: user.roles,
       }),
     };
   }

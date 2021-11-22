@@ -20,12 +20,22 @@ export class MoviesService implements CRUD {
       throw new BadRequestException(error.detail || error.message);
     }
   }
+
   async findOne(id: number): Promise<Movie> {
-    return await this.movieRepository.findOne(id);
+    return await this.movieRepository.findOne({
+      movieId: id,
+      availability: true,
+    });
   }
-  async getAll(perPage = 10, page = 1): Promise<Movie[]> {
+
+  async getAll(sorted = false, perPage = 10, page = 1): Promise<Movie[]> {
     const skip = perPage * page - perPage;
-    return await this.movieRepository.find({ take: perPage, skip });
+    return await this.movieRepository.find({
+      where: { availability: true },
+      order: { title: sorted ? 'ASC' : 'DESC' },
+      take: perPage,
+      skip,
+    });
   }
   async updateOne(id: number, updateMovieDto: PatchMovieDto): Promise<Movie> {
     try {
