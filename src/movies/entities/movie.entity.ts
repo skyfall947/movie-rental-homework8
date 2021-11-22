@@ -4,8 +4,8 @@ import {
   Column,
   CreateDateColumn,
   Entity,
-  JoinColumn,
-  ManyToOne,
+  JoinTable,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
@@ -14,7 +14,7 @@ import {
 export class Movie extends BaseEntity {
   @PrimaryGeneratedColumn()
   movieId: number;
-  @Column()
+  @Column({ unique: true })
   title: string;
   @Column()
   description: string;
@@ -32,8 +32,14 @@ export class Movie extends BaseEntity {
   createdAt: Date;
   @UpdateDateColumn()
   updatedAt: Date;
+  @Column({ default: 0 })
+  stock: number;
 
-  @ManyToOne(() => Customer)
-  @JoinColumn()
-  customer: Customer;
+  @ManyToMany(() => Customer)
+  @JoinTable()
+  renters: Customer[];
+
+  @ManyToMany(() => Customer)
+  @JoinTable()
+  buyers: Customer[];
 }

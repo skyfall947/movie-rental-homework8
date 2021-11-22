@@ -18,4 +18,8 @@ export class CreateMovieDto {
   @IsNotEmpty()
   @IsBoolean()
   availability: boolean;
+
+  @IsNotEmpty()
+  @IsNumber()
+  stock: number;
 }

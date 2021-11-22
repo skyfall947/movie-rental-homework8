@@ -1,7 +1,5 @@
 import {
   Controller,
-  HttpCode,
-  HttpStatus,
   Param,
   ParseIntPipe,
   Post,
@@ -12,16 +10,12 @@ import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/guards/roles.guard';
 import { Role } from 'src/auth/role.enum';
 import { Roles } from 'src/auth/roles.decorator';
-import { CustomersService } from 'src/customers/customers.service';
 import { Movie } from './entities/movie.entity';
 import { MoviesService } from './movies.service';
 
 @Controller('movies')
 export class MoviesCustomersController {
-  constructor(
-    private readonly moviesService: MoviesService,
-    private readonly customersService: CustomersService,
-  ) {}
+  constructor(private readonly moviesService: MoviesService) {}
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)
@@ -30,22 +24,16 @@ export class MoviesCustomersController {
     @Param('id', ParseIntPipe) movieId: number,
     @Req() { user },
   ): Promise<Movie> {
-    const customer = await this.customersService.findOne(user.id);
-    return this.moviesService.disableMovieAndAddCustomer(movieId, customer);
+    return await this.moviesService.saleMovie(movieId, user.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)
   @Post('rent/:id')
-  async rentMovie(
-    @Param('id', ParseIntPipe) movieId: number,
-    @Req() { user },
-  ): Promise<Movie> {
-    const customer = await this.customersService.findOne(user.id);
-    return this.moviesService.disableMovieAndAddCustomer(movieId, customer);
+  async rentMovie(@Param('id', ParseIntPipe) movieId: number, @Req() { user }) {
+    return await this.moviesService.rentMovie(movieId, user.id);
   }
 
-  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)
   @Post('unrent/:id')
@@ -53,6 +41,6 @@ export class MoviesCustomersController {
     @Param('id', ParseIntPipe) movieId: number,
     @Req() { user },
   ) {
-    return this.moviesService.enableMovieAndRemoveCustomer(movieId, user.id);
+    return this.moviesService.unRentMovie(movieId, user.id);
   }
 }

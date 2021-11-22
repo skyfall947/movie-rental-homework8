@@ -4,14 +4,15 @@ import { CRUD } from 'src/common/interfaces/crud.interface';
 import { Repository } from 'typeorm';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { PatchMovieDto } from './dto/patch-movie.dto';
-import { Customer } from 'src/customers/entities/customer.entity';
 import { Movie } from './entities/movie.entity';
+import { CustomersService } from 'src/customers/customers.service';
 
 @Injectable()
 export class MoviesService implements CRUD {
   constructor(
     @InjectRepository(Movie)
     private readonly movieRepository: Repository<Movie>,
+    private readonly customerService: CustomersService,
   ) {}
   async insertOne(createMovieDto: CreateMovieDto): Promise<Movie> {
     try {
@@ -38,6 +39,7 @@ export class MoviesService implements CRUD {
       skip,
     });
   }
+
   async updateOne(id: number, updateMovieDto: PatchMovieDto): Promise<Movie> {
     try {
       const movie = await this.movieRepository.preload({
@@ -64,34 +66,60 @@ export class MoviesService implements CRUD {
     return await this.movieRepository.clear();
   }
 
-  async disableMovieAndAddCustomer(
-    id: number,
-    customer: Customer,
-  ): Promise<Movie> {
+  async rentMovie(movieId: number, customerId: number) {
     try {
-      const movie = await this.movieRepository.findOneOrFail(id);
-      if (movie.availability == false)
-        throw new Error('This movie is not available');
-      movie.availability = false;
-      movie.customer = customer;
-      return await movie.save();
+      const movie = await this.movieRepository.findOneOrFail(movieId, {
+        relations: ['renters'],
+      });
+      if (!movie.availability) throw new Error('No movies available to rent');
+      const rentedBy = movie.renters.find(
+        (renter) => renter.customerId == customerId,
+      );
+      if (rentedBy) {
+        throw new Error('The customer logged in cant rent the same movie');
+      }
+      const customer = await this.customerService.findOne(customerId);
+      movie.renters = [customer, ...movie.renters];
+      movie.stock = movie.stock - 1 <= 0 ? 0 : movie.stock - 1;
+      if (movie.stock == 0) movie.availability = false;
+      return await this.movieRepository.save(movie);
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
 
-  async enableMovieAndRemoveCustomer(movieId: number, customerId: number) {
+  async unRentMovie(movieId: number, customerId: number) {
     try {
-      const movie = await this.movieRepository.findOneOrFail(
-        { movieId },
-        { relations: ['customer'] },
+      const movie = await this.movieRepository.findOneOrFail(movieId, {
+        relations: ['renters'],
+      });
+      const actualRenters = movie.renters.filter(
+        (renter) => renter.customerId != customerId,
       );
-      if (!movie.customer) throw new Error('This movie is not rented');
-      if (movie.customer.customerId !== customerId)
-        throw Error('The actual customer not rented this movie');
+      if (movie.renters.length == actualRenters.length) {
+        throw new Error('The customer logged in not rented this movie');
+      }
+      movie.stock = movie.stock + 1;
       movie.availability = true;
-      movie.customer = null;
-      await movie.save();
+      movie.renters = actualRenters;
+      return await this.movieRepository.save(movie);
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async saleMovie(movieId: number, customerId: number) {
+    try {
+      const movie = await this.movieRepository.findOneOrFail(movieId, {
+        relations: ['buyers'],
+      });
+      if (!movie.availability)
+        throw new Error('This movie is not available to sale');
+      const customer = await this.customerService.findOne(customerId);
+      movie.buyers = [...movie.buyers, customer];
+      movie.stock = movie.stock - 1 <= 0 ? 0 : movie.stock - 1;
+      if (movie.stock == 0) movie.availability = false;
+      return await this.movieRepository.save(movie);
     } catch (error) {
       throw new BadRequestException(error.message);
     }
