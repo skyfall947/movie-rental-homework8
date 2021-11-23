@@ -1,10 +1,21 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  UseGuards,
+  Delete,
+  Param,
+  ParseIntPipe,
+  HttpCode,
+  HttpStatus,
+} from '@nestjs/common';
 import { TagsService } from './tags.service';
 import { CreateTagDto } from './dto/create-tag.dto';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { Roles } from 'src/auth/roles.decorator';
-import { Role } from 'src/auth/role.enum';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Role } from '../auth/role.enum';
+import { Roles } from '../auth/roles.decorator';
 
 @Controller('tags')
 export class TagsController {
@@ -13,12 +24,20 @@ export class TagsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin)
   @Post()
-  create(@Body() createTagDto: CreateTagDto) {
+  createTag(@Body() createTagDto: CreateTagDto) {
     return this.tagsService.insertOne(createTagDto);
   }
 
   @Get()
   findAll() {
     return this.tagsService.getAll();
+  }
+
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  @Delete(':tagId')
+  deleteTag(@Param('tagId', ParseIntPipe) tagId: number) {
+    return this.tagsService.removeOne(tagId);
   }
 }

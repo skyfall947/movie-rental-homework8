@@ -1,31 +1,34 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
+  Controller,
   Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
   ParseIntPipe,
-  UseGuards,
+  Patch,
+  Post,
+  Put,
   Query,
-  ParseBoolPipe,
-  UseInterceptors,
-  UploadedFile,
   Res,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
+  NotFoundException,
 } from '@nestjs/common';
-import { MoviesService } from './movies.service';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Role } from '../auth/role.enum';
+import { Roles } from '../auth/roles.decorator';
+import { editFileName, imageFileFilter } from '../common/utils/image-utils';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { PatchMovieDto } from './dto/patch-movie.dto';
 import { Movie } from './entities/movie.entity';
 import { PatchValidationPipe } from './movies.pipe';
-import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { Roles } from 'src/auth/roles.decorator';
-import { Role } from 'src/auth/role.enum';
-import { RolesGuard } from 'src/auth/guards/roles.guard';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { editFileName, imageFileFilter } from 'src/common/utils/image-utils';
+import { MoviesService } from './movies.service';
 
 @Controller('movies')
 export class MoviesController {
@@ -39,7 +42,7 @@ export class MoviesController {
   }
 
   @Get()
-  findAll(@Query('sorted', ParseBoolPipe) sorted: boolean): Promise<Movie[]> {
+  findAll(@Query('sorted') sorted: boolean): Promise<Movie[]> {
     return this.moviesService.getAll(sorted);
   }
 
@@ -58,6 +61,7 @@ export class MoviesController {
     return this.moviesService.updateOne(id, patchMovieDto);
   }
 
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin)
   @Delete(':id')
@@ -65,7 +69,10 @@ export class MoviesController {
     return this.moviesService.removeOne(id);
   }
 
-  @Post(':id/upload-poster')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.Admin)
+  @Put('poster/:id')
   @UseInterceptors(
     FileInterceptor('poster', {
       storage: diskStorage({
@@ -79,27 +86,16 @@ export class MoviesController {
     @UploadedFile() file: Express.Multer.File,
     @Param('id', ParseIntPipe) movieId: number,
   ) {
-    console.log(file);
     return await this.moviesService.updateOne(movieId, {
       posterUrl: file.filename,
-    });
+    } as PatchMovieDto);
   }
 
-  @Get('poster/:img')
-  async getPoster(@Param('img') img: string, @Res() res) {
-    return res.sendFile(img, { root: './posters' });
-  }
-
-  @Delete()
-  async removeAll(): Promise<void> {
-    return await this.moviesService.removeAll();
-  }
-
-  @Post(':movieId/tags/:tagId')
-  tagMovie(
-    @Param('tagId', ParseIntPipe) tagId: number,
-    @Param('movieId', ParseIntPipe) movieId: number,
-  ) {
-    return this.moviesService.tagMovie(movieId, tagId);
+  @Get('poster/:id')
+  async getPoster(@Param('id', ParseIntPipe) movieId: number, @Res() res) {
+    const movie = await this.moviesService.findOne(movieId);
+    if (movie.posterUrl == 'NO_DEFINED')
+      throw new NotFoundException('This movie doesnt have a poster');
+    return res.sendFile(movie.posterUrl, { root: './posters' });
   }
 }

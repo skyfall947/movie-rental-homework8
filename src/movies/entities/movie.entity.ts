@@ -20,20 +20,20 @@ export class Movie extends BaseEntity {
   @Column()
   description: string;
   @Column({ default: 'NO_DEFINED' })
-  poster: string;
+  posterUrl: string;
   @Column()
   trailerUrl: string;
   @Column()
   price: number;
   @Column({ default: 0 })
   likes: number;
-  @Column()
+  @Column({ default: true })
   availability: boolean;
   @CreateDateColumn()
   createdAt: Date;
   @UpdateDateColumn()
   updatedAt: Date;
-  @Column({ default: 0 })
+  @Column()
   stock: number;
 
   @ManyToMany(() => Customer)

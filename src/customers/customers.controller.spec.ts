@@ -1,8 +1,8 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import {
-  mockCustomer,
-  mockCustomerCreate,
-  mockCustomers,
+  customerDb,
+  customerToCreate,
+  customersDb,
 } from '../../test/mocks/customers-mock';
 import { CustomersController } from './customers.controller';
 import { CustomersService } from './customers.service';
@@ -33,9 +33,9 @@ describe('CustomersController', () => {
             findOne: jest
               .fn()
               .mockImplementation((id: number) =>
-                Promise.resolve({ customerId: id, ...mockCustomer }),
+                Promise.resolve({ customerId: id, ...customerDb }),
               ),
-            getAll: jest.fn().mockResolvedValue(mockCustomers),
+            getAll: jest.fn().mockResolvedValue(customersDb),
             updateOne: jest
               .fn()
               .mockImplementation(
@@ -57,7 +57,7 @@ describe('CustomersController', () => {
 
   describe('getCustomers', () => {
     it('should get an array of customers', async () => {
-      await expect(controller.getCustomers()).resolves.toEqual(mockCustomers);
+      await expect(controller.getCustomers()).resolves.toEqual(customersDb);
     });
   });
 
@@ -66,17 +66,17 @@ describe('CustomersController', () => {
       const id = 1;
       await expect(controller.getCustomerById(id)).resolves.toEqual({
         customerId: id,
-        ...mockCustomer,
+        ...customerDb,
       });
     });
 
     describe('createCustomer', () => {
       it('should create a new customer and return the created one', async () => {
         await expect(
-          controller.createCustomer(mockCustomerCreate),
+          controller.createCustomer(customerToCreate),
         ).resolves.toMatchObject({
           customerId: 1,
-          ...mockCustomerCreate,
+          ...customerToCreate,
         });
       });
     });

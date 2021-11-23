@@ -1,24 +1,24 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
-import {
-  mockCustomerCreate,
-  mockCustomerPatch,
-  mockCustomerPut,
-  mockCustomersCreate,
-} from './mocks/customers-mock';
+import { customerToCreate, mockCustomerCreate2 } from './mocks/customers-mock';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Customer } from '../src/customers/entities/customer.entity';
 import { CustomersModule } from '../src/customers/customers.module';
+import { AuthModule } from '../src/auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
-describe('CustomerController (e2e)', () => {
+describe('CustomersModule', () => {
   let app: INestApplication;
-  let customerId;
+  let customer;
+  let customerToken: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
       imports: [
+        ConfigModule.forRoot({ isGlobal: true }),
         CustomersModule,
+        AuthModule,
         TypeOrmModule.forRoot({
           type: 'postgres',
           host: 'localhost',
@@ -34,85 +34,95 @@ describe('CustomerController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
-    await request(app.getHttpServer()).delete('/customers');
   });
 
-  afterAll(async () => {
-    // clear all and add an admin
-    await request(app.getHttpServer()).delete('/customers');
-    // create dumb data on movies_test
-    await Promise.all(
-      mockCustomersCreate.map((customer) => {
-        return request(app.getHttpServer()).post(`/customers`).send(customer);
-      }),
-    );
-    await app.close();
-  });
+  afterAll(async () => await app.close());
 
-  describe('CustomersModule', () => {
-    it('/customers (POST) CREATED', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/customers')
-        .send(mockCustomerCreate)
-        .expect(HttpStatus.CREATED);
-      const newCustomer = response.body;
-      expect(newCustomer.email).toBe(mockCustomerCreate.email);
-      customerId = newCustomer.customerId;
+  describe('/customers', () => {
+    it('should create a new customer', async () => {
+      customer = (
+        await request(app.getHttpServer())
+          .post('/customers')
+          .send(customerToCreate)
+          .expect(HttpStatus.CREATED)
+      ).body;
+      expect(customer.email).toBe(customerToCreate.email);
     });
 
-    it('/customers (POST) BAD REQUEST duplicated email', async () => {
+    it('should not create a duplicated customer', async () => {
       await request(app.getHttpServer())
         .post('/customers')
-        .send(mockCustomerCreate)
+        .send(customerToCreate)
         .expect(HttpStatus.BAD_REQUEST);
     });
 
-    it('/customers (POST) CREATED', async () => {
+    it('should create another customer', async () => {
       const response = await request(app.getHttpServer())
         .post('/customers')
-        .send(mockCustomersCreate[0])
+        .send(mockCustomerCreate2)
         .expect(HttpStatus.CREATED);
       const newCustomer = response.body;
-      expect(newCustomer.email).toBe(mockCustomersCreate[0].email);
+      expect(newCustomer.email).toBe(mockCustomerCreate2.email);
     });
 
-    it('/customers (GET) OK 3 customers on DB', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/customers')
-        .expect(HttpStatus.OK);
-      expect(response.body).toHaveLength(3);
-    });
-
-    it('/customers (PUT)', async () => {
-      const response = await request(app.getHttpServer())
-        .put(`/customers/${customerId}`)
-        .send(mockCustomerPut)
-        .expect(HttpStatus.OK);
-      const updatedCustomer = response.body;
-      expect(updatedCustomer.email).toBe(mockCustomerPut.email);
-      expect(updatedCustomer.fullName).toBe(mockCustomerPut.fullName);
-    });
-
-    it('/customers (PATCH)', async () => {
-      const response = await request(app.getHttpServer())
-        .patch(`/customers/${customerId}`)
-        .send(mockCustomerPatch)
-        .expect(HttpStatus.OK);
-      const updatedCustomer = response.body;
-      expect(updatedCustomer.email).toBe(mockCustomerPatch.email);
-    });
-
-    it('/customers (DELETE)', async () => {
-      await request(app.getHttpServer())
-        .delete(`/customers/${customerId}`)
-        .expect(HttpStatus.NO_CONTENT);
-    });
-
-    it('/customers (GET) OK 2 customers on DB', async () => {
+    it('should get all customers', async () => {
       const response = await request(app.getHttpServer())
         .get('/customers')
         .expect(HttpStatus.OK);
       expect(response.body).toHaveLength(2);
     });
   });
+
+  describe('/auth/login', () => {
+    it('should login a customer', async () => {
+      customerToken = (
+        await request(app.getHttpServer())
+          .post('/auth/login')
+          .send(customerToCreate)
+          .expect(HttpStatus.OK)
+      ).body;
+      console.log('🚀 | it | customerToken', customerToken);
+    });
+  });
+
+  // describe('/customers with Bearer', () => {
+  //   it('should update all the customer', async () => {
+  //     console.log('🚀 | it | customer', customer);
+  //     console.log('🚀 | it | token', customerToken);
+  //     const response = await request(app.getHttpServer())
+  //       .put(`/customers/${customer.customerId}`)
+  //       .set('Authorization', `Bearer ${customerToken}`)
+  //       .send(customerToUpdate)
+  //       .expect(HttpStatus.OK);
+  //     const updatedCustomer = response.body;
+  //     expect(updatedCustomer.email).toBe(customerToUpdate.email);
+  //     expect(updatedCustomer.fullName).toBe(customerToUpdate.fullName);
+  //   });
+  // it('should update only the email', async () => {
+  //   const originalCustomer = (
+  //     await request(app.getHttpServer())
+  //       .get(`/customers/${customer.customerId}`)
+  //       .expect(HttpStatus.OK)
+  //   ).body;
+  //   const updatedCustomer = (
+  //     await request(app.getHttpServer())
+  //       .patch(`/customers/${customer.customerId}`)
+  //       .send(mockCustomerPatch)
+  //       .expect(HttpStatus.OK)
+  //   ).body;
+  //   expect(updatedCustomer.email).toBe(mockCustomerPatch.email);
+  //   expect(originalCustomer.fullName).toBe(updatedCustomer.fullName);
+  // });
+  // it('should delete a customer', async () => {
+  //   await request(app.getHttpServer())
+  //     .delete(`/customers/${customer.customerId}`)
+  //     .expect(HttpStatus.NO_CONTENT);
+  // });
+  // it('/customers (GET) OK 1 customers on DB', async () => {
+  //   const response = await request(app.getHttpServer())
+  //     .get('/customers')
+  //     .expect(HttpStatus.OK);
+  //   expect(response.body).toHaveLength(1);
+  // });
+  // });
 });

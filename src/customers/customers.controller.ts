@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
@@ -10,7 +11,10 @@ import {
   Patch,
   Post,
   Put,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PatchValidationPipe } from './customers.pipe';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
@@ -24,7 +28,7 @@ export class CustomersController {
 
   @Get()
   async getCustomers(): Promise<Customer[]> {
-    return this.customersService.getAll(false);
+    return this.customersService.getAll();
   }
 
   @Get(':id')
@@ -38,31 +42,45 @@ export class CustomersController {
     return this.customersService.insertOne(customer);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Patch(':id')
   async updateCustomer(
     @Param('id', ParseIntPipe) id: number,
     @Body(new PatchValidationPipe()) customer: PatchCustomerDto,
+    @Req() req,
   ): Promise<Customer> {
+    if (req.user.id != id) {
+      throw new ForbiddenException(
+        'The customer data can only be updated by the customer it self',
+      );
+    }
     return this.customersService.updateOne(id, customer);
   }
 
+  @UseGuards(JwtAuthGuard)
   @Put(':id')
   async updateAllCustomer(
     @Param('id', ParseIntPipe) id: number,
     @Body() customer: PutCustomerDto,
+    @Req() req,
   ) {
+    if (req.user.id != id) {
+      throw new ForbiddenException(
+        'The customer data can only be updated by the customer it self',
+      );
+    }
     return this.customersService.updateOne(id, customer);
   }
 
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
-  async deleteCustomer(@Param('id', ParseIntPipe) id: number) {
+  async deleteCustomer(@Param('id', ParseIntPipe) id: number, @Req() req) {
+    if (req.user.id != id) {
+      throw new ForbiddenException(
+        'The customer data can only be updated by the customer it self',
+      );
+    }
     return this.customersService.removeOne(id);
-  }
-
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @Delete()
-  async deleleteAllCustomers() {
-    return this.customersService.removeAll();
   }
 }

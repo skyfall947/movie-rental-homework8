@@ -31,4 +31,25 @@ export class TagsService {
       throw new BadRequestException(error.message);
     }
   }
+
+  async removeOne(tagId: number) {
+    try {
+      const tag = await this.tagRepository.findOneOrFail(tagId);
+      const moviesTaggedWithThisTag = await this.tagRepository
+        .createQueryBuilder('tag')
+        .innerJoinAndSelect(
+          'movie_tags_tag',
+          'tagged',
+          'tag.tagId = tagged.tagTagId',
+        )
+        .where('tag.tagId = :tagId', { tagId })
+        .execute();
+      if (moviesTaggedWithThisTag.length != 0) {
+        throw new Error('This tag have movies related to it');
+      }
+      await this.tagRepository.remove(tag);
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
 }

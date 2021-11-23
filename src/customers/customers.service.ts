@@ -7,10 +7,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Customer } from './entities/customer.entity';
-import { CRUD } from 'src/common/interfaces/crud.interface';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { PatchCustomerDto } from './dto/patch-customer.dto';
+import { CRUD } from '../common/interfaces/crud.interface';
 
 @Injectable()
 export class CustomersService implements CRUD {
@@ -21,26 +21,25 @@ export class CustomersService implements CRUD {
 
   async insertOne(createCustomerDto: CreateCustomerDto) {
     try {
-      const customer = this.customerRepository.create({
-        ...createCustomerDto,
-        isAdmin: false,
-      });
-      await customer.save();
-      return this.findOne(customer.customerId);
+      const customer = new Customer();
+      customer.isAdmin = false;
+      customer.fullName = createCustomerDto.fullName;
+      customer.email = createCustomerDto.email;
+      customer.password = createCustomerDto.password;
+      const customerSaved = await this.customerRepository.save(customer);
+      return this.findOne(customerSaved.customerId);
     } catch (error) {
       throw new BadRequestException(error.detail || error.message);
     }
   }
 
   async findOne(id: number) {
-    return await this.customerRepository.findOne(id);
+    return await this.customerRepository.findOneOrFail(id);
   }
 
-  async getAll(_sorted: boolean, perPage = 10, page = 1): Promise<Customer[]> {
-    const skip = perPage * page - perPage;
+  async getAll(): Promise<Customer[]> {
     return await this.customerRepository.find({
-      take: perPage,
-      skip,
+      where: { isAdmin: false },
     });
   }
 
@@ -70,18 +69,6 @@ export class CustomersService implements CRUD {
     } catch (error) {
       throw new BadRequestException(error.message);
     }
-  }
-
-  async removeAll(): Promise<void> {
-    const customers = await this.getAll(false);
-    await this.customerRepository.remove(customers);
-    const admin = this.customerRepository.create({
-      fullName: 'Admin',
-      email: 'admin@gmail.com',
-      password: 'Aa1####',
-      isAdmin: true,
-    });
-    await admin.save();
   }
 
   async getOneByEmail(email: string): Promise<Customer> {

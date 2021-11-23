@@ -1,4 +1,4 @@
-import { IsBoolean, IsNotEmpty, IsNumber, IsUrl } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsUrl } from 'class-validator';
 
 export class CreateMovieDto {
   @IsNotEmpty()
@@ -14,10 +14,6 @@ export class CreateMovieDto {
   @IsNotEmpty()
   @IsNumber()
   price: number;
-
-  @IsNotEmpty()
-  @IsBoolean()
-  availability: boolean;
 
   @IsNotEmpty()
   @IsNumber()

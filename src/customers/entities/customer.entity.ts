@@ -37,7 +37,7 @@ export class Customer extends BaseEntity {
 
   static findByEmail(email: string) {
     return Customer.createQueryBuilder()
-      .select(['Customer.email', 'Customer.customerId'])
+      .select(['Customer.email', 'Customer.customerId', 'Customer.isAdmin'])
       .addSelect('Customer.password')
       .where('Customer.email = :email', { email })
       .getOne();
