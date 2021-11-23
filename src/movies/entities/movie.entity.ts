@@ -1,5 +1,3 @@
-import { Customer } from 'src/customers/entities/customer.entity';
-import { Tag } from 'src/tags/entities/tag.entity';
 import {
   BaseEntity,
   Column,
@@ -10,6 +8,8 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Customer } from '../../customers/entities/customer.entity';
+import { Tag } from '../../tags/entities/tag.entity';
 
 @Entity()
 export class Movie extends BaseEntity {

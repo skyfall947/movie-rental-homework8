@@ -36,7 +36,7 @@ export class CustomersService implements CRUD {
     return await this.customerRepository.findOne(id);
   }
 
-  async getAll(_sorted: boolean, perPage = 10, page = 1): Promise<any> {
+  async getAll(_sorted: boolean, perPage = 10, page = 1): Promise<Customer[]> {
     const skip = perPage * page - perPage;
     return await this.customerRepository.find({
       take: perPage,
