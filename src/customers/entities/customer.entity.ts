@@ -5,6 +5,7 @@ import {
   BeforeUpdate,
   Column,
   CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
@@ -34,6 +35,9 @@ export class Customer extends BaseEntity {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @DeleteDateColumn()
+  deletedDate: Date;
 
   static findByEmail(email: string) {
     return Customer.createQueryBuilder()

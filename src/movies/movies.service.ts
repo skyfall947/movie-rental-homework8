@@ -14,11 +14,14 @@ export class MoviesService implements CRUD {
   ) {}
   async insertOne(createMovieDto: CreateMovieDto): Promise<Movie> {
     try {
-      const movie = this.movieRepository.create({
-        ...createMovieDto,
-        availability: createMovieDto.stock <= 0 ? false : true,
-      });
-      return await movie.save();
+      const movie = new Movie();
+      movie.title = createMovieDto.title;
+      movie.description = createMovieDto.description;
+      movie.trailerUrl = createMovieDto.trailerUrl;
+      movie.stock = createMovieDto.stock <= 0 ? 0 : createMovieDto.stock;
+      movie.likes = createMovieDto.likes;
+      movie.availability = createMovieDto.stock <= 0 ? false : true;
+      return await this.movieRepository.save(movie);
     } catch (error) {
       throw new BadRequestException(error.detail || error.message);
     }

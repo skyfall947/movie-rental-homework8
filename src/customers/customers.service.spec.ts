@@ -1,49 +1,54 @@
+import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import {
-  customerDb,
-  customersDb,
   customerToCreate,
-  customerUpdateDb,
+  customerToUpdate,
 } from '../../test/mocks/customers-mock';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { Customer } from './entities/customer.entity';
 
 describe('CustomersService', () => {
-  let service: CustomersService;
-  let repository: Repository<Customer>;
+  let customersService: CustomersService;
+  let customerRepository: Repository<Customer>;
   beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
+    const moduleRef: TestingModule = await Test.createTestingModule({
       providers: [
         CustomersService,
         {
           provide: getRepositoryToken(Customer),
           useValue: {
-            findOneOrFail: jest.fn().mockResolvedValue(customerDb),
-            save: jest.fn().mockResolvedValue(customerDb),
-            find: jest.fn().mockResolvedValue(customersDb),
-            preload: jest.fn().mockResolvedValue(customerUpdateDb),
+            save: jest.fn().mockResolvedValue(new Customer()),
+            findOneOrFail: jest.fn().mockImplementation(async (id: number) => {
+              if (id == -1) throw new NotFoundException();
+              return new Customer();
+            }),
+            find: jest.fn().mockResolvedValue([new Customer()]),
+            preload: jest.fn().mockResolvedValue(new Customer()),
+            softDelete: jest.fn().mockReturnValue(new UpdateResult()),
           },
         },
       ],
     }).compile();
-    service = module.get<CustomersService>(CustomersService);
-    repository = module.get<Repository<Customer>>(getRepositoryToken(Customer));
+    customersService = moduleRef.get<CustomersService>(CustomersService);
+    customerRepository = moduleRef.get<Repository<Customer>>(
+      getRepositoryToken(Customer),
+    );
   });
 
   it('the service should be defined', () => {
-    expect(service).toBeDefined();
+    expect(customersService).toBeDefined();
   });
 
   describe('insertOne()', () => {
     it('should create a customer', () => {
-      const repoSpy = jest.spyOn(repository, 'save');
-      expect(service.insertOne(customerToCreate)).resolves.toMatchObject(
-        customerDb,
-      );
-      expect(repoSpy).toBeCalledWith(
+      const repoSpy = jest.spyOn(customerRepository, 'save');
+      expect(
+        customersService.insertOne(customerToCreate),
+      ).resolves.toBeDefined();
+      expect(repoSpy).toBeCalledWith<CreateCustomerDto[]>(
         expect.objectContaining<CreateCustomerDto>(customerToCreate),
       );
     });
@@ -51,17 +56,85 @@ describe('CustomersService', () => {
 
   describe('findOne()', () => {
     it('should return a customer', () => {
-      const repoSpy = jest.spyOn(repository, 'findOneOrFail');
-      expect(service.findOne(1)).resolves.toEqual(customerDb);
-      expect(repoSpy).toBeCalledWith(1);
+      const customerId = 1;
+      const repoSpy = jest.spyOn(customerRepository, 'findOneOrFail');
+      expect(customersService.findOne(customerId)).resolves.toBeInstanceOf(
+        Customer,
+      );
+      expect(repoSpy).toBeCalledWith<number[]>(customerId);
+    });
+
+    it('should return a Not Found exception if the id not exists on DB', () => {
+      const customerId = -1;
+      const repoSpy = jest.spyOn(customerRepository, 'findOneOrFail');
+      expect(customersService.findOne(customerId)).rejects.toThrow(
+        new NotFoundException(),
+      );
+      expect(repoSpy).toBeCalledWith<number[]>(customerId);
     });
   });
 
   describe('getAll()', () => {
     it('should get all customers', () => {
-      const repoSpy = jest.spyOn(repository, 'find');
-      expect(service.getAll()).resolves.toEqual(customersDb);
+      const repoSpy = jest.spyOn(customerRepository, 'find');
+      expect(customersService.getAll()).resolves.toHaveLength(1);
       expect(repoSpy).toBeCalledWith({ where: { isAdmin: false } });
+    });
+  });
+
+  describe('updateOne()', () => {
+    it('should updated a customer', () => {
+      const customerId = 1;
+      const repoSpy = jest.spyOn(customerRepository, 'preload');
+      expect(
+        customersService.updateOne(customerId, customerToUpdate),
+      ).resolves.toBeDefined();
+      expect(repoSpy).toBeCalledWith({
+        customerId,
+        ...customerToUpdate,
+        isAdmin: false,
+      });
+    });
+  });
+
+  describe('removeOne()', () => {
+    it('should remove a customer', () => {
+      const customerId = 1;
+      const repoSpy = jest.spyOn(customerRepository, 'softDelete');
+      expect(customersService.removeOne(customerId)).resolves.toBeInstanceOf(
+        UpdateResult,
+      );
+      expect(repoSpy).toBeCalledWith<number[]>(customerId);
+    });
+  });
+
+  describe('getOneByEmail()', () => {
+    it('should return a customer with password', () => {
+      const customerEmail = 'customer@gmail.com';
+      const spyCustomer = jest
+        .spyOn(Customer, 'findByEmail')
+        .mockImplementation(async () => {
+          const customer = new Customer();
+          customer.password = '123';
+          return customer;
+        });
+      expect(
+        customersService.getOneByEmail(customerEmail),
+      ).resolves.toHaveProperty('password');
+      expect(spyCustomer).toBeCalledWith<string[]>(customerEmail);
+    });
+
+    it('should throw a Not Found exception', () => {
+      const customerEmail = 'invalidEmail';
+      const spyCustomer = jest
+        .spyOn(Customer, 'findByEmail')
+        .mockImplementation(async (email: string) => {
+          throw new NotFoundException(`User with ${email} not found`);
+        });
+      expect(customersService.getOneByEmail(customerEmail)).rejects.toThrow(
+        new NotFoundException(`User with ${customerEmail} not found`),
+      );
+      expect(spyCustomer).toBeCalledWith<string[]>(customerEmail);
     });
   });
 });

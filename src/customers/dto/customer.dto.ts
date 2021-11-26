@@ -1,8 +1,10 @@
+import { Exclude } from 'class-transformer';
 import {
   IsBoolean,
   IsDate,
   IsEmail,
   IsNumber,
+  IsOptional,
   IsString,
 } from 'class-validator';
 
@@ -19,4 +21,7 @@ export class CustomerDto {
   updatedAt: Date;
   @IsBoolean()
   isAdmin: boolean;
+  @Exclude()
+  @IsOptional()
+  password?: string;
 }

@@ -18,4 +18,8 @@ export class CreateMovieDto {
   @IsNotEmpty()
   @IsNumber()
   stock: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  likes: number;
 }

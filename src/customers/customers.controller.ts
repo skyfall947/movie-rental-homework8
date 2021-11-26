@@ -14,10 +14,12 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import { UpdateResult } from 'typeorm';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { PatchValidationPipe } from './customers.pipe';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
+import { CustomerDto } from './dto/customer.dto';
 import { PatchCustomerDto } from './dto/patch-customer.dto';
 import { PutCustomerDto } from './dto/put-customer.dto';
 import { Customer } from './entities/customer.entity';
@@ -48,10 +50,10 @@ export class CustomersController {
     @Param('id', ParseIntPipe) id: number,
     @Body(new PatchValidationPipe()) customer: PatchCustomerDto,
     @Req() req,
-  ): Promise<Customer> {
+  ): Promise<CustomerDto> {
     if (req.user.id != id) {
       throw new ForbiddenException(
-        'The customer data can only be updated by the customer it self',
+        'The customer data can only be managed by the customer it self',
       );
     }
     return this.customersService.updateOne(id, customer);
@@ -63,22 +65,24 @@ export class CustomersController {
     @Param('id', ParseIntPipe) id: number,
     @Body() customer: PutCustomerDto,
     @Req() req,
-  ) {
+  ): Promise<CustomerDto> {
     if (req.user.id != id) {
       throw new ForbiddenException(
-        'The customer data can only be updated by the customer it self',
+        'The customer data can only be managed by the customer it self',
       );
     }
     return this.customersService.updateOne(id, customer);
   }
 
   @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.NO_CONTENT)
   @Delete(':id')
-  async deleteCustomer(@Param('id', ParseIntPipe) id: number, @Req() req) {
+  async deleteCustomer(
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req,
+  ): Promise<UpdateResult> {
     if (req.user.id != id) {
       throw new ForbiddenException(
-        'The customer data can only be updated by the customer it self',
+        'The customer data can only be managed by the customer it self',
       );
     }
     return this.customersService.removeOne(id);

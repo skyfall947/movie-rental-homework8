@@ -4,13 +4,15 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 
 import { Customer } from './entities/customer.entity';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { PatchCustomerDto } from './dto/patch-customer.dto';
 import { CRUD } from '../common/interfaces/crud.interface';
+import { plainToClass } from 'class-transformer';
+import { CustomerDto } from './dto/customer.dto';
 
 @Injectable()
 export class CustomersService implements CRUD {
@@ -27,14 +29,18 @@ export class CustomersService implements CRUD {
       customer.email = createCustomerDto.email;
       customer.password = createCustomerDto.password;
       const customerSaved = await this.customerRepository.save(customer);
-      return this.findOne(customerSaved.customerId);
+      return plainToClass(CustomerDto, customerSaved);
     } catch (error) {
       throw new BadRequestException(error.detail || error.message);
     }
   }
 
   async findOne(id: number) {
-    return await this.customerRepository.findOneOrFail(id);
+    try {
+      return await this.customerRepository.findOneOrFail(id);
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
   }
 
   async getAll(): Promise<Customer[]> {
@@ -46,15 +52,15 @@ export class CustomersService implements CRUD {
   async updateOne(
     id: number,
     updateCustomerDto: UpdateCustomerDto | PatchCustomerDto,
-  ): Promise<Customer> {
+  ): Promise<CustomerDto> {
     try {
-      const customer = await this.customerRepository.preload({
+      const customerUpdated = await this.customerRepository.preload({
         customerId: id,
         ...updateCustomerDto,
         isAdmin: false,
       });
-      await customer.save();
-      return this.findOne(id);
+      const customerSaved = await this.customerRepository.save(customerUpdated);
+      return plainToClass(CustomerDto, customerSaved);
     } catch (error) {
       throw new BadRequestException(
         error.detail || 'A customer with the id provided not exist',
@@ -62,13 +68,8 @@ export class CustomersService implements CRUD {
     }
   }
 
-  async removeOne(id: number): Promise<void> {
-    try {
-      const customer = await this.customerRepository.findOneOrFail(id);
-      await this.customerRepository.remove(customer);
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+  async removeOne(id: number): Promise<UpdateResult> {
+    return this.customerRepository.softDelete(id);
   }
 
   async getOneByEmail(email: string): Promise<Customer> {
