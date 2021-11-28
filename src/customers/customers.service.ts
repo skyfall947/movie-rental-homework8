@@ -11,7 +11,7 @@ import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { PatchCustomerDto } from './dto/patch-customer.dto';
 import { CRUD } from '../common/interfaces/crud.interface';
-import { classToPlain, plainToClass } from 'class-transformer';
+import { plainToClass } from 'class-transformer';
 import { CustomerDto } from './dto/customer.dto';
 
 @Injectable()
