@@ -17,9 +17,9 @@ import { TagsModule } from './tags/tags.module';
         port: configService.get<number>(
           configService.get<string>('POSTGRES_PORT'),
         ),
-        username: configService.get<string>('POSTGRES_USER'),
+        username: configService.get<string>('POSTGRES_USERNAME'),
         password: configService.get<string>('POSTGRES_PASSWORD'),
-        database: configService.get<string>('POSTGRES_DATABASE'),
+        database: configService.get<string>('POSTGRES_DATABASE_NAME'),
         autoLoadEntities: true,
         synchronize: true,
       }),
