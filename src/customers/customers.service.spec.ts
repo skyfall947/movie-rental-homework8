@@ -8,6 +8,7 @@ import {
 } from '../../test/mocks/customers-mock';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
+import { CustomerDto } from './dto/customer.dto';
 import { Customer } from './entities/customer.entity';
 
 describe('CustomersService', () => {
@@ -47,7 +48,7 @@ describe('CustomersService', () => {
       const repoSpy = jest.spyOn(customerRepository, 'save');
       expect(
         customersService.insertOne(customerToCreate),
-      ).resolves.toBeDefined();
+      ).resolves.toBeInstanceOf(CustomerDto);
       expect(repoSpy).toBeCalledWith<CreateCustomerDto[]>(
         expect.objectContaining<CreateCustomerDto>(customerToCreate),
       );
@@ -59,7 +60,7 @@ describe('CustomersService', () => {
       const customerId = 1;
       const repoSpy = jest.spyOn(customerRepository, 'findOneOrFail');
       expect(customersService.findOne(customerId)).resolves.toBeInstanceOf(
-        Customer,
+        CustomerDto,
       );
       expect(repoSpy).toBeCalledWith<number[]>(customerId);
     });
@@ -78,7 +79,10 @@ describe('CustomersService', () => {
     it('should get all customers', () => {
       const repoSpy = jest.spyOn(customerRepository, 'find');
       expect(customersService.getAll()).resolves.toHaveLength(1);
-      expect(repoSpy).toBeCalledWith({ where: { isAdmin: false } });
+      expect(repoSpy).toBeCalledWith({
+        select: ['customerId', 'fullName', 'email'],
+        where: { isAdmin: false },
+      });
     });
   });
 

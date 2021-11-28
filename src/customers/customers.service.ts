@@ -11,7 +11,7 @@ import { CreateCustomerDto } from './dto/create-customer.dto';
 import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { PatchCustomerDto } from './dto/patch-customer.dto';
 import { CRUD } from '../common/interfaces/crud.interface';
-import { plainToClass } from 'class-transformer';
+import { classToPlain, plainToClass } from 'class-transformer';
 import { CustomerDto } from './dto/customer.dto';
 
 @Injectable()
@@ -37,6 +37,15 @@ export class CustomersService implements CRUD {
 
   async findOne(id: number) {
     try {
+      const customer = await this.customerRepository.findOneOrFail(id);
+      return plainToClass(CustomerDto, customer);
+    } catch (error) {
+      throw new NotFoundException(error.message);
+    }
+  }
+
+  async findOnePrivate(id: number) {
+    try {
       return await this.customerRepository.findOneOrFail(id);
     } catch (error) {
       throw new NotFoundException(error.message);
@@ -44,9 +53,11 @@ export class CustomersService implements CRUD {
   }
 
   async getAll(): Promise<Customer[]> {
-    return await this.customerRepository.find({
+    const customers = await this.customerRepository.find({
+      select: ['customerId', 'fullName', 'email'],
       where: { isAdmin: false },
     });
+    return customers;
   }
 
   async updateOne(

@@ -27,7 +27,7 @@ export class MoviesCustomersService {
       if (rentedBy) {
         throw new Error('The customer logged in cant rent the same movie');
       }
-      const customer = await this.customersService.findOne(customerId);
+      const customer = await this.customersService.findOnePrivate(customerId);
       movie.renters = [customer, ...movie.renters];
       movie.stock = movie.stock - 1;
       movie.availability = movie.stock > 0 ? true : false;
@@ -64,7 +64,7 @@ export class MoviesCustomersService {
       });
       if (!movie.availability)
         throw new Error('This movie is not available to sale');
-      const customer = await this.customersService.findOne(customerId);
+      const customer = await this.customersService.findOnePrivate(customerId);
       movie.buyers = [...movie.buyers, customer];
       movie.stock = movie.stock - 1 <= 0 ? 0 : movie.stock - 1;
       if (movie.stock === 0) movie.availability = false;
