@@ -94,7 +94,7 @@ export class MoviesController {
   @Get('poster/:id')
   async getPoster(@Param('id', ParseIntPipe) movieId: number, @Res() res) {
     const movie = await this.moviesService.findOne(movieId);
-    if (movie.posterUrl == 'NO_DEFINED')
+    if (movie.posterUrl === 'NO_DEFINED')
       throw new NotFoundException('This movie doesnt have a poster');
     return res.sendFile(movie.posterUrl, { root: './posters' });
   }

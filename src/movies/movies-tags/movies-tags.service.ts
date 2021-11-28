@@ -30,7 +30,7 @@ export class MoviesTagsService {
   async untangleMovie(movieId: number, tagId: number) {
     try {
       const movie = await this.moviesService.findOne(movieId);
-      const actualTags = movie.tags.filter((tag) => tag.tagId != tagId);
+      const actualTags = movie.tags.filter((tag) => tag.tagId !== tagId);
       movie.tags = actualTags;
       await this.movieRepository.save(movie);
     } catch (error) {

@@ -22,7 +22,7 @@ export class MoviesCustomersService {
         };
       }
       const rentedBy = movie.renters.find(
-        (renter) => renter.customerId == customerId,
+        (renter) => renter.customerId === customerId,
       );
       if (rentedBy) {
         throw new Error('The customer logged in cant rent the same movie');
@@ -43,9 +43,9 @@ export class MoviesCustomersService {
         relations: ['renters'],
       });
       const actualRenters = movie.renters.filter(
-        (renter) => renter.customerId != customerId,
+        (renter) => renter.customerId !== customerId,
       );
-      if (movie.renters.length == actualRenters.length) {
+      if (movie.renters.length === actualRenters.length) {
         throw new Error('The customer logged in not rented this movie');
       }
       movie.stock = movie.stock + 1;
@@ -67,7 +67,7 @@ export class MoviesCustomersService {
       const customer = await this.customersService.findOne(customerId);
       movie.buyers = [...movie.buyers, customer];
       movie.stock = movie.stock - 1 <= 0 ? 0 : movie.stock - 1;
-      if (movie.stock == 0) movie.availability = false;
+      if (movie.stock === 0) movie.availability = false;
       return await this.movieRepository.save(movie);
     } catch (error) {
       throw new BadRequestException(error.message);

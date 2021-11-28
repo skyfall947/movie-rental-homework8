@@ -19,7 +19,7 @@ describe('MoviesService', () => {
           useValue: {
             save: jest.fn().mockResolvedValue(new Movie()),
             findOneOrFail: jest.fn().mockImplementation(async (conditions) => {
-              if (conditions.movieId == -1) throw new NotFoundException();
+              if (conditions.movieId === -1) throw new NotFoundException();
               return new Movie();
             }),
             find: jest.fn().mockResolvedValue([new Movie()]),

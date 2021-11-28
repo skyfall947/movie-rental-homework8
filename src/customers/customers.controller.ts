@@ -51,7 +51,7 @@ export class CustomersController {
     @Body(new PatchValidationPipe()) customer: PatchCustomerDto,
     @Req() req,
   ): Promise<CustomerDto> {
-    if (req.user.id != id) {
+    if (req.user.id !== id) {
       throw new ForbiddenException(
         'The customer data can only be managed by the customer it self',
       );
@@ -66,7 +66,7 @@ export class CustomersController {
     @Body() customer: PutCustomerDto,
     @Req() req,
   ): Promise<CustomerDto> {
-    if (req.user.id != id) {
+    if (req.user.id !== id) {
       throw new ForbiddenException(
         'The customer data can only be managed by the customer it self',
       );
@@ -80,7 +80,7 @@ export class CustomersController {
     @Param('id', ParseIntPipe) id: number,
     @Req() req,
   ): Promise<UpdateResult> {
-    if (req.user.id != id) {
+    if (req.user.id !== id) {
       throw new ForbiddenException(
         'The customer data can only be managed by the customer it self',
       );

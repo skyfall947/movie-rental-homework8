@@ -44,7 +44,7 @@ export class TagsService {
         )
         .where('tag.tagId = :tagId', { tagId })
         .execute();
-      if (moviesTaggedWithThisTag.length != 0) {
+      if (moviesTaggedWithThisTag.length !== 0) {
         throw new Error('This tag have movies related to it');
       }
       await this.tagRepository.remove(tag);

@@ -76,7 +76,7 @@ export class MoviesService implements CRUD {
       const movie = await this.movieRepository.findOneOrFail(id, {
         relations: ['renters'],
       });
-      if (movie.renters.length != 0)
+      if (movie.renters.length !== 0)
         throw new Error('This movie is rented, cant delete it');
       await this.movieRepository.remove(movie);
     } catch (error) {

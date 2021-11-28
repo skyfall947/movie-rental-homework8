@@ -22,7 +22,7 @@ describe('CustomersService', () => {
           useValue: {
             save: jest.fn().mockResolvedValue(new Customer()),
             findOneOrFail: jest.fn().mockImplementation(async (id: number) => {
-              if (id == -1) throw new NotFoundException();
+              if (id === -1) throw new NotFoundException();
               return new Customer();
             }),
             find: jest.fn().mockResolvedValue([new Customer()]),
