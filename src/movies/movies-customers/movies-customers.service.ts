@@ -16,10 +16,11 @@ export class MoviesCustomersService {
       const movie = await this.movieRepository.findOneOrFail(movieId, {
         relations: ['renters'],
       });
-      if (!movie.availability)
+      if (!movie.availability) {
         return {
           message: 'This movie is not available to rent',
         };
+      }
       const rentedBy = movie.renters.find(
         (renter) => renter.customerId == customerId,
       );
@@ -28,8 +29,8 @@ export class MoviesCustomersService {
       }
       const customer = await this.customersService.findOne(customerId);
       movie.renters = [customer, ...movie.renters];
-      movie.stock = movie.stock - 1 <= 0 ? 0 : movie.stock - 1;
-      if (movie.stock == 0) movie.availability = false;
+      movie.stock = movie.stock - 1;
+      movie.availability = movie.stock > 0 ? true : false;
       return await this.movieRepository.save(movie);
     } catch (error) {
       throw new BadRequestException(error.message);
