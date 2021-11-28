@@ -18,9 +18,15 @@ export class PatchMovieDto {
   @Expose()
   @IsOptional()
   @IsNotEmpty()
-  posterUrl?: string;
+  trailerUrl?: string;
   @Expose()
   @IsOptional()
   @IsNumber()
+  @IsNotEmpty()
   stock?: number;
+  @Expose()
+  @IsOptional()
+  @IsNumber()
+  @IsNotEmpty()
+  likes?: number;
 }

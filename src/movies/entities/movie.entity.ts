@@ -27,7 +27,7 @@ export class Movie extends BaseEntity {
   price: number;
   @Column({ default: 0 })
   likes: number;
-  @Column({ default: true })
+  @Column()
   availability: boolean;
   @CreateDateColumn()
   createdAt: Date;

@@ -18,8 +18,9 @@ export class MoviesService implements CRUD {
       movie.title = createMovieDto.title;
       movie.description = createMovieDto.description;
       movie.trailerUrl = createMovieDto.trailerUrl;
-      movie.stock = createMovieDto.stock <= 0 ? 0 : createMovieDto.stock;
+      movie.stock = createMovieDto.stock;
       movie.likes = createMovieDto.likes;
+      movie.price = createMovieDto.price;
       movie.availability = createMovieDto.stock <= 0 ? false : true;
       return await this.movieRepository.save(movie);
     } catch (error) {
@@ -54,10 +55,6 @@ export class MoviesService implements CRUD {
 
   async updateOne(id: number, updateMovieDto: PatchMovieDto): Promise<Movie> {
     try {
-      if (updateMovieDto.stock) {
-        updateMovieDto.stock =
-          updateMovieDto.stock <= 0 ? 0 : updateMovieDto.stock;
-      }
       const movie = await this.movieRepository.preload({
         movieId: id,
         ...updateMovieDto,
