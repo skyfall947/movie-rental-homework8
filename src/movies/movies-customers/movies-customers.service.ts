@@ -36,7 +36,7 @@ export class MoviesCustomersService {
     }
   }
 
-  async unRentMovie(movieId: number, customerId: number) {
+  async returnMovie(movieId: number, customerId: number) {
     try {
       const movie = await this.movieRepository.findOneOrFail(movieId, {
         relations: ['renters'],
@@ -56,7 +56,7 @@ export class MoviesCustomersService {
     }
   }
 
-  async saleMovie(movieId: number, customerId: number) {
+  async buyMovie(movieId: number, customerId: number) {
     try {
       const movie = await this.movieRepository.findOneOrFail(movieId, {
         relations: ['buyers'],

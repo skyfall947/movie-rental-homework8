@@ -19,28 +19,28 @@ export class MoviesCustomersController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)
-  @Post('sale/:id')
+  @Post(':id/buy')
   async saleMovie(
     @Param('id', ParseIntPipe) movieId: number,
     @Req() { user },
   ): Promise<Movie> {
-    return await this.moviesCustomerService.saleMovie(movieId, user.id);
+    return await this.moviesCustomerService.buyMovie(movieId, user.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)
-  @Post('rent/:id')
+  @Post(':id/rent')
   async rentMovie(@Param('id', ParseIntPipe) movieId: number, @Req() { user }) {
     return await this.moviesCustomerService.rentMovie(movieId, user.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)
-  @Post('unrent/:id')
+  @Post(':id/return')
   async unRentMovie(
     @Param('id', ParseIntPipe) movieId: number,
     @Req() { user },
   ) {
-    return this.moviesCustomerService.unRentMovie(movieId, user.id);
+    return this.moviesCustomerService.returnMovie(movieId, user.id);
   }
 }
