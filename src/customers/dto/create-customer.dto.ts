@@ -14,7 +14,7 @@ export class CreateCustomerDto {
   email: string;
   @IsString()
   @MinLength(4)
-  @MaxLength(20)
+  @MaxLength(30)
   @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
     message: 'password too weak',
   })
