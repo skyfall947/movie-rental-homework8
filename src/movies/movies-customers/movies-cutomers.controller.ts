@@ -4,12 +4,22 @@ import {
   Controller,
   ForbiddenException,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   ParseIntPipe,
   Post,
   Req,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+  ApiUnprocessableEntityResponse,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../../auth/guards/roles.guard';
 import { Role } from '../../auth/role.enum';
@@ -17,10 +27,14 @@ import { Roles } from '../../auth/roles.decorator';
 import { Movie } from '../entities/movie.entity';
 import { MoviesCustomersService } from './movies-customers.service';
 
+@ApiTags('Movies: Rent - Buy')
+@ApiBearerAuth()
 @Controller('movies')
 export class MoviesCustomersController {
   constructor(private readonly moviesCustomerService: MoviesCustomersService) {}
 
+  @ApiOkResponse({ description: 'Movies rented provied successfully' })
+  @ApiUnauthorizedResponse({ description: 'Jwt auth should be provided' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)
   @Get('customers/:id/rented')
@@ -36,6 +50,8 @@ export class MoviesCustomersController {
     return this.moviesCustomerService.getMoviesRented(user.id);
   }
 
+  @ApiOkResponse({ description: 'Movies purchased provied successfully' })
+  @ApiUnauthorizedResponse({ description: 'Jwt auth should be provided' })
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)
   @Get('customers/:id/purchased')
@@ -51,6 +67,10 @@ export class MoviesCustomersController {
     return this.moviesCustomerService.getMoviesPurchased(user.id);
   }
 
+  @ApiOkResponse({ description: 'Movie purchased successfully' })
+  @ApiUnauthorizedResponse({ description: 'Jwt auth should be provided' })
+  @ApiNotFoundResponse({ description: 'Not found' })
+  @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)
   @Post(':id?/buy')
@@ -73,6 +93,13 @@ export class MoviesCustomersController {
     );
   }
 
+  @ApiOkResponse({ description: 'Movie rented successfully' })
+  @ApiUnauthorizedResponse({ description: 'Jwt auth should be provided' })
+  @ApiNotFoundResponse({ description: 'Not found' })
+  @ApiUnprocessableEntityResponse({
+    description: 'Rent movie operation cannot be done',
+  })
+  @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)
   @Post(':id?/rent')
@@ -95,6 +122,15 @@ export class MoviesCustomersController {
     );
   }
 
+  @ApiOkResponse({ description: 'Movie returned successfully' })
+  @ApiUnauthorizedResponse({
+    description: 'Jwt auth should be provided',
+  })
+  @ApiNotFoundResponse({ description: 'Not found' })
+  @ApiUnprocessableEntityResponse({
+    description: 'Return movie operation cannot be done',
+  })
+  @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)
   @Post(':id/return')

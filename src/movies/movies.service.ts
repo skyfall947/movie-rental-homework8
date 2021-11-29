@@ -47,7 +47,8 @@ export class MoviesService implements CRUD {
     }
   }
 
-  async findAll(isAvailable: boolean, title = '%%'): Promise<MovieDto[]> {
+  async findAll(isAvailable: boolean, title: string): Promise<MovieDto[]> {
+    if (!title) title = '%%';
     return this.movieRepository.find({
       select: ['movieId', 'title', 'price', 'likes', 'stock'],
       where: {
@@ -84,11 +85,12 @@ export class MoviesService implements CRUD {
 
   async updateOne(id: number, updateMovieDto: PatchMovieDto): Promise<Movie> {
     try {
-      const movie = await this.movieRepository.preload({
+      const data = {
         movieId: id,
         ...updateMovieDto,
-        stock: Math.max(updateMovieDto.stock, 0),
-      });
+      };
+      if (updateMovieDto.stock) data.stock = Math.max(updateMovieDto.stock, 0);
+      const movie = await this.movieRepository.preload(data);
       return await this.movieRepository.save(movie);
     } catch (error) {
       throw new BadRequestException(

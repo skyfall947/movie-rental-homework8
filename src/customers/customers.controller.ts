@@ -14,8 +14,20 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiForbiddenResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 import { UpdateResult } from 'typeorm';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
 import { Role } from '../auth/role.enum';
 import { Roles } from '../auth/roles.decorator';
 import { PatchValidationPipe } from './customers.pipe';
@@ -26,27 +38,44 @@ import { PatchCustomerDto } from './dto/patch-customer.dto';
 import { PutCustomerDto } from './dto/put-customer.dto';
 import { Customer } from './entities/customer.entity';
 
+@ApiTags('Customer')
 @Controller('customers')
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
+  @ApiOkResponse({ description: 'Customers retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Jwt auth should be provied' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.User, Role.Admin)
   @Get()
   async getCustomers(): Promise<Customer[]> {
     return this.customersService.findAll();
   }
 
+  @ApiOkResponse({ description: 'Customer retrieved successfully' })
+  @ApiUnauthorizedResponse({ description: 'Jwt auth should be provied' })
+  @ApiNotFoundResponse({ description: 'Customer not found' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.User, Role.Admin)
+  @ApiOkResponse({ description: 'Customer retrieved successfully' })
   @Get(':id')
-  async getCustomerById(@Param('id', ParseIntPipe) id: number) {
+  getCustomerById(@Param('id', ParseIntPipe) id: number) {
     return this.customersService.findOne(id);
   }
 
+  @ApiCreatedResponse({ description: 'Customer created successfully' })
   @HttpCode(HttpStatus.CREATED)
   @Post()
   async createCustomer(@Body() customer: CreateCustomerDto) {
     return this.customersService.insertOne(customer);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @ApiOkResponse({ description: 'Customer updated successfully' })
+  @ApiUnauthorizedResponse({ description: 'Jwt auth should be provied' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User, Role.Admin)
   @Patch(':id')
   async updateCustomer(
@@ -62,7 +91,16 @@ export class CustomersController {
     return this.customersService.updateOne(id, customer, req.user.roles);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @ApiOkResponse({ description: 'Customer updated successfully' })
+  @ApiUnauthorizedResponse({ description: 'Jwt auth should be provied' })
+  @ApiBadRequestResponse({ description: 'All properties are required' })
+  @ApiForbiddenResponse({
+    description: 'Customer data can only be managed by the owner customer',
+  })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.User)
+  @HttpCode(HttpStatus.NO_CONTENT)
   @Put(':id')
   async updateAllCustomer(
     @Param('id', ParseIntPipe) id: number,
@@ -77,7 +115,12 @@ export class CustomersController {
     return this.customersService.updateOne(id, customer);
   }
 
-  @UseGuards(JwtAuthGuard)
+  @ApiNoContentResponse({ description: 'Customer removed successfully' })
+  @ApiNotFoundResponse({ description: 'Id provided not found' })
+  @ApiUnauthorizedResponse({ description: 'Jwt auth should be provied' })
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.User)
   @Delete(':id')
   async deleteCustomer(
     @Param('id', ParseIntPipe) id: number,

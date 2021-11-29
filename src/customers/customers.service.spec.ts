@@ -63,7 +63,9 @@ describe('CustomersService', () => {
       expect(customersService.findOne(customerId)).resolves.toBeInstanceOf(
         CustomerDto,
       );
-      expect(repoSpy).toBeCalledWith<number[]>(customerId);
+      expect(repoSpy).toBeCalledWith(customerId, {
+        where: { isAdmin: false },
+      });
     });
 
     it('should return a Not Found exception if the id not exists on DB', () => {
@@ -72,7 +74,9 @@ describe('CustomersService', () => {
       expect(customersService.findOne(customerId)).rejects.toThrow(
         new NotFoundException(),
       );
-      expect(repoSpy).toBeCalledWith<number[]>(customerId);
+      expect(repoSpy).toBeCalledWith(customerId, {
+        where: { isAdmin: false },
+      });
     });
   });
 

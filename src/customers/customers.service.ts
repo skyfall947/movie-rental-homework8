@@ -38,7 +38,9 @@ export class CustomersService implements CRUD {
 
   async findOne(id: number) {
     try {
-      const customer = await this.customerRepository.findOneOrFail(id);
+      const customer = await this.customerRepository.findOneOrFail(id, {
+        where: { isAdmin: false },
+      });
       return plainToClass(CustomerDto, customer);
     } catch (error) {
       throw new NotFoundException(error.message);
