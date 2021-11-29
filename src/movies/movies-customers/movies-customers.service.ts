@@ -20,7 +20,7 @@ export class MoviesCustomersService {
       relations: ['renters'],
     });
     if (!movie) throw new NotFoundException('Movie not found');
-    if (!movie.availability) {
+    if (movie.stock <= 0) {
       throw new UnprocessableEntityException(
         'This movie is not available to rent',
       );
@@ -36,7 +36,6 @@ export class MoviesCustomersService {
     const customer = await this.customersService.findOnePrivate(customerId);
     movie.renters = [customer, ...movie.renters];
     movie.stock = Math.max(movie.stock - 1, 0);
-    movie.availability = movie.stock > 0;
     await this.movieRepository.save(movie);
     movie.renters = [];
     return movie;
@@ -68,7 +67,6 @@ export class MoviesCustomersService {
       );
     }
     movie.stock = movie.stock + 1;
-    movie.availability = true;
     movie.renters = actualRenters;
     await this.movieRepository.save(movie);
     movie.renters = [];
@@ -80,7 +78,7 @@ export class MoviesCustomersService {
       relations: ['buyers'],
     });
     if (!movie) throw new NotFoundException('Movie not found');
-    if (!movie.availability) {
+    if (movie.stock <= 0) {
       throw new UnprocessableEntityException(
         'This movie is not available to buy',
       );
@@ -88,7 +86,6 @@ export class MoviesCustomersService {
     const customer = await this.customersService.findOnePrivate(customerId);
     movie.buyers = [...movie.buyers, customer];
     movie.stock = Math.max(movie.stock - 1, 0);
-    movie.availability = movie.stock > 0;
     await this.movieRepository.save(movie);
     movie.buyers = [];
     return movie;

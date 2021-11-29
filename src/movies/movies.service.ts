@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThanOrEqual, Like, MoreThan, Repository } from 'typeorm';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { PatchMovieDto } from './dto/patch-movie.dto';
 import { Movie } from './entities/movie.entity';
@@ -20,10 +20,9 @@ export class MoviesService implements CRUD {
       movie.title = createMovieDto.title;
       movie.description = createMovieDto.description;
       movie.trailerUrl = createMovieDto.trailerUrl;
-      movie.stock = createMovieDto.stock;
+      movie.stock = Math.max(createMovieDto.stock, 0);
       movie.likes = createMovieDto.likes;
       movie.price = createMovieDto.price;
-      movie.availability = createMovieDto.stock <= 0 ? false : true;
       return await this.movieRepository.save(movie);
     } catch (error) {
       throw new BadRequestException(error.detail || error.message);
@@ -35,21 +34,25 @@ export class MoviesService implements CRUD {
       return await this.movieRepository.findOneOrFail(
         {
           movieId: id,
-          availability: true,
         },
-        { relations: ['tags'] },
+        {
+          relations: ['tags'],
+          where: {
+            stock: MoreThan(0),
+          },
+        },
       );
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
 
-  async findAll(isAvailable: boolean, title: string): Promise<MovieDto[]> {
+  async findAll(isAvailable: boolean, title = '%%'): Promise<MovieDto[]> {
     return this.movieRepository.find({
-      select: ['movieId', 'title', 'price', 'likes', 'availability'],
+      select: ['movieId', 'title', 'price', 'likes', 'stock'],
       where: {
-        availability: isAvailable,
-        title,
+        stock: isAvailable ? MoreThan(0) : LessThanOrEqual(0),
+        title: Like(title),
       },
       relations: ['tags'],
     });
@@ -84,7 +87,7 @@ export class MoviesService implements CRUD {
       const movie = await this.movieRepository.preload({
         movieId: id,
         ...updateMovieDto,
-        availability: updateMovieDto.stock <= 0 ? false : true,
+        stock: Math.max(updateMovieDto.stock, 0),
       });
       return await this.movieRepository.save(movie);
     } catch (error) {

@@ -1,7 +1,7 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { MoreThan, Repository } from 'typeorm';
 import {
   moviesToSortByTitle,
   movieToCreate,
@@ -31,8 +31,6 @@ describe('MoviesService', () => {
               return new Movie();
             }),
             find: jest.fn().mockResolvedValue([new MovieDto()]),
-            // updateOne: jest.fn(),
-            // removeOne: jest.fn(),
           },
         },
       ],
@@ -62,11 +60,8 @@ describe('MoviesService', () => {
       const customerId = 1;
       expect(moviesService.findOne(customerId)).resolves.toBeInstanceOf(Movie);
       expect(moviesRepository.findOneOrFail).toBeCalledWith(
-        {
-          movieId: customerId,
-          availability: true,
-        },
-        { relations: ['tags'] },
+        { movieId: customerId },
+        { relations: ['tags'], where: { stock: MoreThan(0) } },
       );
     });
 
@@ -76,11 +71,8 @@ describe('MoviesService', () => {
         new NotFoundException(),
       );
       expect(moviesRepository.findOneOrFail).toBeCalledWith(
-        {
-          movieId: customerId,
-          availability: true,
-        },
-        { relations: ['tags'] },
+        { movieId: customerId },
+        { relations: ['tags'], where: { stock: MoreThan(0) } },
       );
     });
   });

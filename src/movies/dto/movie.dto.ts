@@ -1,11 +1,4 @@
-import {
-  IsArray,
-  IsBoolean,
-  IsNotEmpty,
-  IsNumber,
-  IsOptional,
-  IsUrl,
-} from 'class-validator';
+import { IsArray, IsNotEmpty, IsNumber, IsUrl } from 'class-validator';
 import { Tag } from '../../tags/entities/tag.entity';
 
 export class MovieDto {
@@ -21,10 +14,6 @@ export class MovieDto {
   @IsNotEmpty()
   @IsNumber()
   stock: number;
-  @IsNotEmpty()
-  @IsBoolean()
-  @IsOptional()
-  availability?: boolean;
   @IsNumber()
   likes?: number;
   @IsArray()
