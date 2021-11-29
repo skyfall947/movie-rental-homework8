@@ -16,6 +16,7 @@ describe('MoviesController', () => {
           useValue: {
             getMoviesRented: jest.fn().mockResolvedValue([new Movie()]),
             getMoviesPurchased: jest.fn().mockResolvedValue([new Movie()]),
+            rentMovie: jest.fn(),
           },
         },
       ],
@@ -31,6 +32,21 @@ describe('MoviesController', () => {
 
   it('should be defined', () => {
     expect(moviesCustomersController).toBeDefined();
+  });
+
+  describe('rentMovie()', () => {
+    it('should rent a many movies', () => {
+      const serviceSpy = jest
+        .spyOn(moviesCustomersService, 'rentMovie')
+        .mockResolvedValue(new Movie());
+      expect(
+        moviesCustomersController.rentMovie(
+          { user: { id: 1 } },
+          { moviesId: [1, 2] },
+        ),
+      ).resolves.toHaveLength(2);
+      expect(serviceSpy).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe('getMoviesRented()', () => {

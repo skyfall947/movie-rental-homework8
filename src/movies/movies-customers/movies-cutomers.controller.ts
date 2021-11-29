@@ -1,4 +1,6 @@
 import {
+  BadRequestException,
+  Body,
   Controller,
   ForbiddenException,
   Get,
@@ -61,12 +63,25 @@ export class MoviesCustomersController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)
-  @Post(':id/rent')
+  @Post(':id?/rent')
   async rentMovie(
-    @Param('id', ParseIntPipe) movieId: number,
     @Req() { user },
-  ): Promise<Movie> {
-    return this.moviesCustomerService.rentMovie(movieId, user.id);
+    @Body() { moviesId },
+    @Param('id') movieId?: number,
+  ): Promise<Movie | Movie[]> {
+    if (movieId && !moviesId) {
+      return this.moviesCustomerService.rentMovie(movieId, user.id);
+    }
+    if (!movieId && moviesId?.length > 0) {
+      console.log('🚀 | MoviesCustomersController | moviesId', moviesId);
+      const moviesToResolve = moviesId.map((movieId: number) =>
+        this.moviesCustomerService.rentMovie(movieId, user.id),
+      );
+      return Promise.all(moviesToResolve);
+    }
+    throw new BadRequestException(
+      'Param /:movieId or an array of ids of movies required to buy',
+    );
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
