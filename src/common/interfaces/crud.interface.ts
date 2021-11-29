@@ -6,6 +6,6 @@ export interface CRUD {
     limit?: number,
     page?: number,
   ) => Promise<unknown>;
-  updateOne: (id: number, resource: unknown) => Promise<unknown>;
+  updateOne: (id: number, resource: unknown, ...rest: any) => Promise<unknown>;
   removeOne: (id: number) => void;
 }

@@ -20,4 +20,5 @@ export class PutCustomerDto {
     message: 'password too weak',
   })
   password: string;
+  isAdmin?: boolean;
 }

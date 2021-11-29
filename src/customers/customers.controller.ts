@@ -16,6 +16,8 @@ import {
 } from '@nestjs/common';
 import { UpdateResult } from 'typeorm';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Role } from '../auth/role.enum';
+import { Roles } from '../auth/roles.decorator';
 import { PatchValidationPipe } from './customers.pipe';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
@@ -45,18 +47,19 @@ export class CustomersController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Roles(Role.User, Role.Admin)
   @Patch(':id')
   async updateCustomer(
     @Param('id', ParseIntPipe) id: number,
     @Body(new PatchValidationPipe()) customer: PatchCustomerDto,
     @Req() req,
   ): Promise<CustomerDto> {
-    if (req.user.id !== id) {
+    if (req.user.id !== id && !req.user.roles?.includes(Role.Admin)) {
       throw new ForbiddenException(
         'The customer data can only be managed by the customer it self',
       );
     }
-    return this.customersService.updateOne(id, customer);
+    return this.customersService.updateOne(id, customer, req.user.roles);
   }
 
   @UseGuards(JwtAuthGuard)

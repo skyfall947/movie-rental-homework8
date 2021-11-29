@@ -6,6 +6,7 @@ import {
   customerToCreate,
   customerToUpdate,
 } from '../../test/mocks/customers-mock';
+import { Role } from '../auth/role.enum';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { CustomerDto } from './dto/customer.dto';
@@ -91,12 +92,11 @@ describe('CustomersService', () => {
       const customerId = 1;
       const repoSpy = jest.spyOn(customerRepository, 'preload');
       expect(
-        customersService.updateOne(customerId, customerToUpdate),
+        customersService.updateOne(customerId, customerToUpdate, [Role.User]),
       ).resolves.toBeDefined();
       expect(repoSpy).toBeCalledWith({
         customerId,
         ...customerToUpdate,
-        isAdmin: false,
       });
     });
   });

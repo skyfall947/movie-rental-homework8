@@ -1,5 +1,6 @@
 import { Expose } from 'class-transformer';
 import {
+  IsBoolean,
   IsEmail,
   IsNotEmpty,
   IsOptional,
@@ -29,4 +30,10 @@ export class PatchCustomerDto {
     message: 'password too weak',
   })
   password?: string;
+
+  @Expose()
+  @IsOptional()
+  @IsNotEmpty()
+  @IsBoolean()
+  isAdmin?: boolean;
 }
