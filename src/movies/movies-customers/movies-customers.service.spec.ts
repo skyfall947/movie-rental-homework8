@@ -65,5 +65,23 @@ describe('MoviesService', () => {
       expect(result).toHaveLength(2);
       expect(repoSpy).toHaveBeenCalledWith('movie');
     });
+    movie.buyers = [customer, customer2];
+    movie2.buyers = [customer];
+    const moviesBuyedByUser = [movie, movie2];
+    it('should return movies buyed by the customerId', async () => {
+      const createQueryBuilder: any = {
+        innerJoinAndSelect: () => createQueryBuilder,
+        where: () => createQueryBuilder,
+        execute: () => moviesBuyedByUser,
+      };
+      const repoSpy = jest
+        .spyOn(moviesRepository, 'createQueryBuilder')
+        .mockImplementation(() => createQueryBuilder);
+      const result = await moviesCustomersService.getMoviesPurchased(
+        customerId,
+      );
+      expect(result).toHaveLength(2);
+      expect(repoSpy).toHaveBeenCalledWith('movie');
+    });
   });
 });

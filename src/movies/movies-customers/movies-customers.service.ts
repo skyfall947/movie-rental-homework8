@@ -1,6 +1,7 @@
 import {
   Injectable,
   NotFoundException,
+  NotImplementedException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -92,5 +93,9 @@ export class MoviesCustomersService {
     await this.movieRepository.save(movie);
     movie.buyers = [];
     return movie;
+  }
+
+  async getMoviesPurchased(customerId: number) {
+    throw new NotImplementedException();
   }
 }
