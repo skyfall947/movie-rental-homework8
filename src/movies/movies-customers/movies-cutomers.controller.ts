@@ -30,8 +30,11 @@ export class MoviesCustomersController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)
   @Post(':id/rent')
-  async rentMovie(@Param('id', ParseIntPipe) movieId: number, @Req() { user }) {
-    return await this.moviesCustomerService.rentMovie(movieId, user.id);
+  async rentMovie(
+    @Param('id', ParseIntPipe) movieId: number,
+    @Req() { user },
+  ): Promise<Movie> {
+    return this.moviesCustomerService.rentMovie(movieId, user.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -40,7 +43,7 @@ export class MoviesCustomersController {
   async unRentMovie(
     @Param('id', ParseIntPipe) movieId: number,
     @Req() { user },
-  ) {
+  ): Promise<Movie> {
     return this.moviesCustomerService.returnMovie(movieId, user.id);
   }
 }

@@ -11,7 +11,6 @@ export class AdminService implements OnModuleInit {
     private readonly configService: ConfigService,
   ) {}
   async onModuleInit() {
-    console.log(`The module has been initialized.`);
     const admins = await this.customersRepository.find({ isAdmin: true });
     if (admins.length > 0) {
       console.log('There is at least an admin created');
