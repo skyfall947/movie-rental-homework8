@@ -1,5 +1,7 @@
 import {
   Controller,
+  ForbiddenException,
+  Get,
   Param,
   ParseIntPipe,
   Post,
@@ -16,6 +18,21 @@ import { MoviesCustomersService } from './movies-customers.service';
 @Controller('movies')
 export class MoviesCustomersController {
   constructor(private readonly moviesCustomerService: MoviesCustomersService) {}
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.User)
+  @Get('customers/:id')
+  async getMoviesRented(
+    @Param('id', ParseIntPipe) customerId: number,
+    @Req() { user },
+  ): Promise<Movie[]> {
+    if (user.id !== customerId) {
+      throw new ForbiddenException(
+        'Customer logged in cant retrive the list of rented movies',
+      );
+    }
+    return this.moviesCustomerService.getMoviesRented(user.id);
+  }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)

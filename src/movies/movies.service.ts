@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like } from 'typeorm';
+import { Repository } from 'typeorm';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { PatchMovieDto } from './dto/patch-movie.dto';
 import { Movie } from './entities/movie.entity';

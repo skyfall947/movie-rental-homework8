@@ -42,6 +42,18 @@ export class MoviesCustomersService {
     return movie;
   }
 
+  async getMoviesRented(customerId: number): Promise<Movie[]> {
+    return this.movieRepository
+      .createQueryBuilder('movie')
+      .innerJoinAndSelect(
+        'movie_renters_customer',
+        'rented',
+        'movie.movieId = rented.movieMovieId',
+      )
+      .where('rented.customerCustomerId = :customerId', { customerId })
+      .execute();
+  }
+
   async returnMovie(movieId: number, customerId: number): Promise<Movie> {
     const movie = await this.movieRepository.findOne(movieId, {
       relations: ['renters'],
