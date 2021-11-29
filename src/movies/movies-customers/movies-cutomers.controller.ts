@@ -21,7 +21,7 @@ export class MoviesCustomersController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)
-  @Get('customers/:id')
+  @Get('customers/:id/rented')
   async getMoviesRented(
     @Param('id', ParseIntPipe) customerId: number,
     @Req() { user },
@@ -32,6 +32,21 @@ export class MoviesCustomersController {
       );
     }
     return this.moviesCustomerService.getMoviesRented(user.id);
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.User)
+  @Get('customers/:id/purchased')
+  async getMoviesPurchased(
+    @Param('id', ParseIntPipe) customerId: number,
+    @Req() { user },
+  ): Promise<Movie[]> {
+    if (user.id !== customerId) {
+      throw new ForbiddenException(
+        'Customer logged in cant retrive the list of purchased movies',
+      );
+    }
+    return this.moviesCustomerService.getMoviesPurchased(user.id);
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)

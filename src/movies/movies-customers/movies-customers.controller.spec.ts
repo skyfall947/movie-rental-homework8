@@ -15,6 +15,7 @@ describe('MoviesController', () => {
           provide: MoviesCustomersService,
           useValue: {
             getMoviesRented: jest.fn().mockResolvedValue([new Movie()]),
+            getMoviesPurchased: jest.fn().mockResolvedValue([new Movie()]),
           },
         },
       ],
@@ -38,6 +39,15 @@ describe('MoviesController', () => {
         moviesCustomersController.getMoviesRented(1, { user: { id: 1 } }),
       ).resolves.toHaveLength(1);
       expect(moviesCustomersService.getMoviesRented).toBeCalledWith(1);
+    });
+  });
+
+  describe('getMoviesPurchased()', () => {
+    it('should return a list of movies purchased by the user logged', () => {
+      expect(
+        moviesCustomersController.getMoviesPurchased(1, { user: { id: 1 } }),
+      ).resolves.toHaveLength(1);
+      expect(moviesCustomersService.getMoviesPurchased).toBeCalledWith(1);
     });
   });
 });
