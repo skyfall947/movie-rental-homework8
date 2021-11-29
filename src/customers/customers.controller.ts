@@ -30,7 +30,7 @@ export class CustomersController {
 
   @Get()
   async getCustomers(): Promise<Customer[]> {
-    return this.customersService.getAll();
+    return this.customersService.findAll();
   }
 
   @Get(':id')

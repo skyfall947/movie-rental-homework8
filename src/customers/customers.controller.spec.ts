@@ -26,7 +26,7 @@ describe('CustomersController', () => {
           useValue: {
             insertOne: jest.fn().mockResolvedValue(new CustomerDto()),
             findOne: jest.fn().mockResolvedValue(new Customer()),
-            getAll: jest.fn().mockResolvedValue([new Customer()]),
+            findAll: jest.fn().mockResolvedValue([new Customer()]),
             updateOne: jest.fn().mockResolvedValue(new CustomerDto()),
             removeOne: jest.fn().mockResolvedValue(new UpdateResult()),
           },
@@ -45,7 +45,7 @@ describe('CustomersController', () => {
   describe('getCustomers()', () => {
     it('should return an array of customers', () => {
       expect(customersController.getCustomers()).resolves.toHaveLength(1);
-      expect(customersService.getAll).toBeCalled();
+      expect(customersService.findAll).toBeCalled();
     });
   });
 

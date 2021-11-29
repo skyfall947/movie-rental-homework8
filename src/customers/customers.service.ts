@@ -52,7 +52,7 @@ export class CustomersService implements CRUD {
     }
   }
 
-  async getAll(): Promise<Customer[]> {
+  async findAll(): Promise<Customer[]> {
     const customers = await this.customerRepository.find({
       select: ['customerId', 'fullName', 'email'],
       where: { isAdmin: false },

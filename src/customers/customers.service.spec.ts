@@ -78,7 +78,7 @@ describe('CustomersService', () => {
   describe('getAll()', () => {
     it('should get all customers', () => {
       const repoSpy = jest.spyOn(customerRepository, 'find');
-      expect(customersService.getAll()).resolves.toHaveLength(1);
+      expect(customersService.findAll()).resolves.toHaveLength(1);
       expect(repoSpy).toBeCalledWith({
         select: ['customerId', 'fullName', 'email'],
         where: { isAdmin: false },

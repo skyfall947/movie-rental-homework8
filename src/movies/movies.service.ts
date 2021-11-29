@@ -44,16 +44,6 @@ export class MoviesService implements CRUD {
     }
   }
 
-  async getAll(sorted = false, perPage = 10, page = 1): Promise<Movie[]> {
-    const skip = perPage * page - perPage;
-    return await this.movieRepository.find({
-      select: ['movieId', 'title', 'price', 'likes'],
-      order: { title: sorted ? 'ASC' : 'DESC' },
-      take: perPage,
-      skip,
-    });
-  }
-
   async findAll(isAvailable: boolean, title: string): Promise<MovieDto[]> {
     return this.movieRepository.find({
       select: ['movieId', 'title', 'price', 'likes', 'availability'],
