@@ -53,12 +53,24 @@ export class MoviesCustomersController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.User)
-  @Post(':id/buy')
+  @Post(':id?/buy')
   async saleMovie(
-    @Param('id', ParseIntPipe) movieId: number,
     @Req() { user },
-  ): Promise<Movie> {
-    return await this.moviesCustomerService.buyMovie(movieId, user.id);
+    @Body() { moviesListId },
+    @Param('id') movieId?: number,
+  ): Promise<Movie | Movie[]> {
+    if (movieId && !moviesListId) {
+      return await this.moviesCustomerService.buyMovie(movieId, user.id);
+    }
+    if (!movieId && moviesListId?.length > 0) {
+      const moviesToResolve = moviesListId.map((movieId: number) =>
+        this.moviesCustomerService.buyMovie(movieId, user.id),
+      );
+      return Promise.all(moviesToResolve);
+    }
+    throw new BadRequestException(
+      'Param /:movieId or an array of ids of movies required to buy',
+    );
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -66,21 +78,20 @@ export class MoviesCustomersController {
   @Post(':id?/rent')
   async rentMovie(
     @Req() { user },
-    @Body() { moviesId },
+    @Body() { moviesListId },
     @Param('id') movieId?: number,
   ): Promise<Movie | Movie[]> {
-    if (movieId && !moviesId) {
+    if (movieId && !moviesListId) {
       return this.moviesCustomerService.rentMovie(movieId, user.id);
     }
-    if (!movieId && moviesId?.length > 0) {
-      console.log('🚀 | MoviesCustomersController | moviesId', moviesId);
-      const moviesToResolve = moviesId.map((movieId: number) =>
+    if (!movieId && moviesListId?.length > 0) {
+      const moviesToResolve = moviesListId.map((movieId: number) =>
         this.moviesCustomerService.rentMovie(movieId, user.id),
       );
       return Promise.all(moviesToResolve);
     }
     throw new BadRequestException(
-      'Param /:movieId or an array of ids of movies required to buy',
+      'Param /:movieId or an array of ids of movies required to rent',
     );
   }
 

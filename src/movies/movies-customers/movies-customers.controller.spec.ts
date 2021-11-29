@@ -42,7 +42,7 @@ describe('MoviesController', () => {
       expect(
         moviesCustomersController.rentMovie(
           { user: { id: 1 } },
-          { moviesId: [1, 2] },
+          { moviesListId: [1, 2] },
         ),
       ).resolves.toHaveLength(2);
       expect(serviceSpy).toHaveBeenCalledTimes(2);
