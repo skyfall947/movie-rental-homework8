@@ -16,6 +16,8 @@ import {
   UseGuards,
   UseInterceptors,
   NotFoundException,
+  ValidationPipe,
+  UsePipes,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
@@ -25,7 +27,9 @@ import { Role } from '../auth/role.enum';
 import { Roles } from '../auth/roles.decorator';
 import { editFileName, imageFileFilter } from '../common/utils/image-utils';
 import { CreateMovieDto } from './dto/create-movie.dto';
+import { MovieDto } from './dto/movie.dto';
 import { PatchMovieDto } from './dto/patch-movie.dto';
+import { MovieQueries } from './dto/query-movie.dto';
 import { Movie } from './entities/movie.entity';
 import { PatchValidationPipe } from './movies.pipe';
 import { MoviesService } from './movies.service';
@@ -42,8 +46,35 @@ export class MoviesController {
   }
 
   @Get()
-  findAll(@Query('sorted') sorted: boolean): Promise<Movie[]> {
-    return this.moviesService.getAll(sorted);
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async findAll(@Query() queries: MovieQueries): Promise<MovieDto[]> {
+    let movies = await this.moviesService.findAll(
+      queries.available,
+      queries.title,
+    );
+    movies = this.moviesService.filterByTags(
+      movies,
+      queries.tags ? queries.tags.split(',') : [],
+    );
+    enum SORT {
+      TitleASC = queries.sort.search(/^title/) >= 0 ? 1 : 0,
+      TitleDESC = queries.sort.search(/^-title/) >= 0 ? 1 : 0,
+      LikesASC = queries.sort.search(/^likes/) >= 0 ? 1 : 0,
+      LikesDESC = queries.sort.search(/^-likes/) >= 0 ? 1 : 0,
+    }
+    if (SORT.TitleASC || SORT.TitleDESC) {
+      movies = this.moviesService.sortByTitle(
+        movies,
+        SORT.TitleASC >> SORT.TitleDESC === 0,
+      );
+    }
+    if (SORT.LikesASC || SORT.LikesDESC) {
+      movies = this.moviesService.sortByLikes(
+        movies,
+        SORT.LikesASC >> SORT.LikesDESC === 0,
+      );
+    }
+    return movies;
   }
 
   @Get(':id')

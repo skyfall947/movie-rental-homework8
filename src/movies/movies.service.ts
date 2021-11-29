@@ -1,10 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { PatchMovieDto } from './dto/patch-movie.dto';
 import { Movie } from './entities/movie.entity';
 import { CRUD } from '../common/interfaces/crud.interface';
+import { MovieDto } from './dto/movie.dto';
+import { Tag } from '../tags/entities/tag.entity';
 
 @Injectable()
 export class MoviesService implements CRUD {
@@ -45,11 +47,45 @@ export class MoviesService implements CRUD {
   async getAll(sorted = false, perPage = 10, page = 1): Promise<Movie[]> {
     const skip = perPage * page - perPage;
     return await this.movieRepository.find({
-      where: { availability: true },
       select: ['movieId', 'title', 'price', 'likes'],
       order: { title: sorted ? 'ASC' : 'DESC' },
       take: perPage,
       skip,
+    });
+  }
+
+  async findAll(isAvailable: boolean, title: string): Promise<MovieDto[]> {
+    return this.movieRepository.find({
+      select: ['movieId', 'title', 'price', 'likes', 'availability'],
+      where: {
+        availability: isAvailable,
+        title,
+      },
+      relations: ['tags'],
+    });
+  }
+
+  sortByTitle(movies: MovieDto[], isDesc: boolean) {
+    return movies.sort((movieA: Movie, movieB: Movie) => {
+      if (movieA.title > movieB.title) return isDesc ? -1 : 1;
+      if (movieA.title < movieB.title) return isDesc ? 1 : -1;
+      return 0;
+    });
+  }
+
+  sortByLikes(movies: MovieDto[], isDesc: boolean) {
+    return movies.sort((movieA, movieB) => {
+      if (movieA.likes > movieB.likes) return isDesc ? -1 : 1;
+      if (movieA.likes < movieB.likes) return isDesc ? 1 : -1;
+      return 0;
+    });
+  }
+
+  filterByTags(movies: MovieDto[], tags: any[]): MovieDto[] {
+    if (tags.length === 0) return movies;
+    return movies.filter((movie) => {
+      const movieTags = movie.tags.map((obj: Tag) => obj.title);
+      return tags.every((tag: string) => movieTags.includes(tag));
     });
   }
 
