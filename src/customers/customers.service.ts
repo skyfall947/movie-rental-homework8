@@ -8,11 +8,12 @@ import { Repository, UpdateResult } from 'typeorm';
 
 import { Customer } from './entities/customer.entity';
 import { CreateCustomerDto } from './dto/create-customer.dto';
-import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { PatchCustomerDto } from './dto/patch-customer.dto';
 import { CRUD } from '../common/interfaces/crud.interface';
 import { plainToClass } from 'class-transformer';
 import { CustomerDto } from './dto/customer.dto';
+import { Role } from '../auth/role.enum';
+import { PutCustomerDto } from './dto/put-customer.dto';
 
 @Injectable()
 export class CustomersService implements CRUD {
@@ -37,7 +38,9 @@ export class CustomersService implements CRUD {
 
   async findOne(id: number) {
     try {
-      const customer = await this.customerRepository.findOneOrFail(id);
+      const customer = await this.customerRepository.findOneOrFail(id, {
+        where: { isAdmin: false },
+      });
       return plainToClass(CustomerDto, customer);
     } catch (error) {
       throw new NotFoundException(error.message);
@@ -52,7 +55,7 @@ export class CustomersService implements CRUD {
     }
   }
 
-  async getAll(): Promise<Customer[]> {
+  async findAll(): Promise<Customer[]> {
     const customers = await this.customerRepository.find({
       select: ['customerId', 'fullName', 'email'],
       where: { isAdmin: false },
@@ -62,13 +65,16 @@ export class CustomersService implements CRUD {
 
   async updateOne(
     id: number,
-    updateCustomerDto: UpdateCustomerDto | PatchCustomerDto,
+    updateCustomerDto: PatchCustomerDto | PutCustomerDto,
+    roles?: Role[],
   ): Promise<CustomerDto> {
     try {
+      if (!roles?.includes(Role.Admin)) {
+        updateCustomerDto.isAdmin = false;
+      }
       const customerUpdated = await this.customerRepository.preload({
         customerId: id,
         ...updateCustomerDto,
-        isAdmin: false,
       });
       const customerSaved = await this.customerRepository.save(customerUpdated);
       return plainToClass(CustomerDto, customerSaved);

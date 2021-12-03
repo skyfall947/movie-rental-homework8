@@ -6,6 +6,7 @@ import {
   customerToPatch,
   customerToUpdate,
 } from '../../test/mocks/customers-mock';
+import { Role } from '../auth/role.enum';
 import { CustomersController } from './customers.controller';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
@@ -26,7 +27,7 @@ describe('CustomersController', () => {
           useValue: {
             insertOne: jest.fn().mockResolvedValue(new CustomerDto()),
             findOne: jest.fn().mockResolvedValue(new Customer()),
-            getAll: jest.fn().mockResolvedValue([new Customer()]),
+            findAll: jest.fn().mockResolvedValue([new Customer()]),
             updateOne: jest.fn().mockResolvedValue(new CustomerDto()),
             removeOne: jest.fn().mockResolvedValue(new UpdateResult()),
           },
@@ -45,7 +46,7 @@ describe('CustomersController', () => {
   describe('getCustomers()', () => {
     it('should return an array of customers', () => {
       expect(customersController.getCustomers()).resolves.toHaveLength(1);
-      expect(customersService.getAll).toBeCalled();
+      expect(customersService.findAll).toBeCalled();
     });
   });
 
@@ -75,12 +76,13 @@ describe('CustomersController', () => {
       const customerId = 1;
       expect(
         customersController.updateCustomer(customerId, customerToPatch, {
-          user: { id: customerId },
+          user: { id: customerId, roles: [Role.User] },
         }),
       ).resolves.toBeInstanceOf(CustomerDto);
       expect(customersService.updateOne).toBeCalledWith(
         customerId,
         expect.objectContaining<PatchCustomerDto>(customerToPatch),
+        [Role.User],
       );
     });
 
@@ -89,6 +91,7 @@ describe('CustomersController', () => {
       expect(
         customersController.updateCustomer(customerId, customerToPatch, {
           user: { id: customerId + 1 },
+          roles: [Role.User],
         }),
       ).rejects.toThrow(
         new ForbiddenException(
@@ -105,6 +108,7 @@ describe('CustomersController', () => {
       expect(
         customersController.updateAllCustomer(customerId, customerToUpdate, {
           user: { id: customerId },
+          roles: [Role.User],
         }),
       ).resolves.toBeInstanceOf(CustomerDto);
       expect(customersService.updateOne).toBeCalledWith(
@@ -118,6 +122,7 @@ describe('CustomersController', () => {
       expect(
         customersController.updateAllCustomer(customerId, customerToUpdate, {
           user: { id: customerId + 1 },
+          roles: [Role.User],
         }),
       ).rejects.toThrow(
         new ForbiddenException(

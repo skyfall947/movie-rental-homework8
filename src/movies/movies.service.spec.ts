@@ -1,8 +1,16 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { movieToCreate } from '../../test/mocks/movies-mock';
+import { MoreThan, Repository } from 'typeorm';
+import {
+  moviesToSortByTitle,
+  movieToCreate,
+  sortedMoviesLikesAsc,
+  sortedMoviesTitleAsc,
+  unsortedMoviesLikes,
+  unsortedMoviesTitle,
+} from '../../test/mocks/movies-mock';
+import { MovieDto } from './dto/movie.dto';
 import { Movie } from './entities/movie.entity';
 import { MoviesService } from './movies.service';
 
@@ -17,14 +25,12 @@ describe('MoviesService', () => {
         {
           provide: getRepositoryToken(Movie),
           useValue: {
-            save: jest.fn().mockResolvedValue(new Movie()),
+            save: jest.fn().mockResolvedValue(new MovieDto()),
             findOneOrFail: jest.fn().mockImplementation(async (conditions) => {
               if (conditions.movieId === -1) throw new NotFoundException();
               return new Movie();
             }),
-            find: jest.fn().mockResolvedValue([new Movie()]),
-            // updateOne: jest.fn(),
-            // removeOne: jest.fn(),
+            find: jest.fn().mockResolvedValue([new MovieDto()]),
           },
         },
       ],
@@ -43,7 +49,7 @@ describe('MoviesService', () => {
   describe('insertOne()', () => {
     it('should create a new movie', () => {
       expect(moviesService.insertOne(movieToCreate)).resolves.toBeInstanceOf(
-        Movie,
+        MovieDto,
       );
       expect(moviesRepository.save).toBeCalled();
     });
@@ -54,11 +60,8 @@ describe('MoviesService', () => {
       const customerId = 1;
       expect(moviesService.findOne(customerId)).resolves.toBeInstanceOf(Movie);
       expect(moviesRepository.findOneOrFail).toBeCalledWith(
-        {
-          movieId: customerId,
-          availability: true,
-        },
-        { relations: ['tags'] },
+        { movieId: customerId },
+        { relations: ['tags'], where: { stock: MoreThan(0) } },
       );
     });
 
@@ -68,19 +71,46 @@ describe('MoviesService', () => {
         new NotFoundException(),
       );
       expect(moviesRepository.findOneOrFail).toBeCalledWith(
-        {
-          movieId: customerId,
-          availability: true,
-        },
-        { relations: ['tags'] },
+        { movieId: customerId },
+        { relations: ['tags'], where: { stock: MoreThan(0) } },
       );
     });
   });
 
-  describe('getAll()', () => {
-    it('should return all movies available', () => {
-      expect(moviesService.getAll()).resolves.toHaveLength(1);
-      // expect()
+  describe('findAll()', () => {
+    it('should return movies filtered by title and availability', () => {
+      expect(moviesService.findAll(true, 'avengers')).resolves.toHaveLength(1);
+      expect(moviesRepository.find).toBeCalled();
+    });
+  });
+
+  describe('sortByTitle()', () => {
+    it('should sort a list of movies by title', () => {
+      expect(
+        moviesService.sortByTitle(unsortedMoviesTitle as Movie[], false),
+      ).toEqual(sortedMoviesTitleAsc);
+    });
+  });
+
+  describe('sortByLikes()', () => {
+    it('should sort a list of movies by likes', () => {
+      expect(
+        moviesService.sortByLikes(unsortedMoviesLikes as Movie[], false),
+      ).toEqual(sortedMoviesLikesAsc);
+    });
+  });
+
+  describe('filterByTags()', () => {
+    const tags = ['comedy', 'action'];
+    it('should filter movies of a given list of tags', () => {
+      expect(
+        moviesService.filterByTags(moviesToSortByTitle as any[], tags),
+      ).toEqual([moviesToSortByTitle[0]]);
+    });
+    it('should return all movies if an empty list of tags is given', () => {
+      expect(
+        moviesService.filterByTags(moviesToSortByTitle as any[], []),
+      ).toEqual(moviesToSortByTitle);
     });
   });
 });

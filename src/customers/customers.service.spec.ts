@@ -6,6 +6,7 @@ import {
   customerToCreate,
   customerToUpdate,
 } from '../../test/mocks/customers-mock';
+import { Role } from '../auth/role.enum';
 import { CustomersService } from './customers.service';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 import { CustomerDto } from './dto/customer.dto';
@@ -62,7 +63,9 @@ describe('CustomersService', () => {
       expect(customersService.findOne(customerId)).resolves.toBeInstanceOf(
         CustomerDto,
       );
-      expect(repoSpy).toBeCalledWith<number[]>(customerId);
+      expect(repoSpy).toBeCalledWith(customerId, {
+        where: { isAdmin: false },
+      });
     });
 
     it('should return a Not Found exception if the id not exists on DB', () => {
@@ -71,14 +74,16 @@ describe('CustomersService', () => {
       expect(customersService.findOne(customerId)).rejects.toThrow(
         new NotFoundException(),
       );
-      expect(repoSpy).toBeCalledWith<number[]>(customerId);
+      expect(repoSpy).toBeCalledWith(customerId, {
+        where: { isAdmin: false },
+      });
     });
   });
 
   describe('getAll()', () => {
     it('should get all customers', () => {
       const repoSpy = jest.spyOn(customerRepository, 'find');
-      expect(customersService.getAll()).resolves.toHaveLength(1);
+      expect(customersService.findAll()).resolves.toHaveLength(1);
       expect(repoSpy).toBeCalledWith({
         select: ['customerId', 'fullName', 'email'],
         where: { isAdmin: false },
@@ -91,12 +96,11 @@ describe('CustomersService', () => {
       const customerId = 1;
       const repoSpy = jest.spyOn(customerRepository, 'preload');
       expect(
-        customersService.updateOne(customerId, customerToUpdate),
+        customersService.updateOne(customerId, customerToUpdate, [Role.User]),
       ).resolves.toBeDefined();
       expect(repoSpy).toBeCalledWith({
         customerId,
         ...customerToUpdate,
-        isAdmin: false,
       });
     });
   });

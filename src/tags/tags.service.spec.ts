@@ -1,12 +1,12 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+// import { Repository } from 'typeorm';
 import { Tag } from './entities/tag.entity';
 import { TagsService } from './tags.service';
 
 describe('TagsService', () => {
   let service: TagsService;
-  let repository: Repository<Tag>;
+  // let repository: Repository<Tag>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -22,7 +22,7 @@ describe('TagsService', () => {
     }).compile();
 
     service = module.get<TagsService>(TagsService);
-    repository = module.get<Repository<Tag>>(getRepositoryToken(Tag));
+    // repository = module.get<Repository<Tag>>(getRepositoryToken(Tag));
   });
 
   it('should be defined', () => {

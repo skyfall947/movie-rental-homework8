@@ -1,10 +1,12 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { LessThanOrEqual, Like, MoreThan, Repository } from 'typeorm';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { PatchMovieDto } from './dto/patch-movie.dto';
 import { Movie } from './entities/movie.entity';
 import { CRUD } from '../common/interfaces/crud.interface';
+import { MovieDto } from './dto/movie.dto';
+import { Tag } from '../tags/entities/tag.entity';
 
 @Injectable()
 export class MoviesService implements CRUD {
@@ -18,10 +20,9 @@ export class MoviesService implements CRUD {
       movie.title = createMovieDto.title;
       movie.description = createMovieDto.description;
       movie.trailerUrl = createMovieDto.trailerUrl;
-      movie.stock = createMovieDto.stock;
+      movie.stock = Math.max(createMovieDto.stock, 0);
       movie.likes = createMovieDto.likes;
       movie.price = createMovieDto.price;
-      movie.availability = createMovieDto.stock <= 0 ? false : true;
       return await this.movieRepository.save(movie);
     } catch (error) {
       throw new BadRequestException(error.detail || error.message);
@@ -33,33 +34,63 @@ export class MoviesService implements CRUD {
       return await this.movieRepository.findOneOrFail(
         {
           movieId: id,
-          availability: true,
         },
-        { relations: ['tags'] },
+        {
+          relations: ['tags'],
+          where: {
+            stock: MoreThan(0),
+          },
+        },
       );
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
 
-  async getAll(sorted = false, perPage = 10, page = 1): Promise<Movie[]> {
-    const skip = perPage * page - perPage;
-    return await this.movieRepository.find({
-      where: { availability: true },
-      select: ['movieId', 'title', 'price', 'likes'],
-      order: { title: sorted ? 'ASC' : 'DESC' },
-      take: perPage,
-      skip,
+  async findAll(isAvailable: boolean, title: string): Promise<MovieDto[]> {
+    if (!title) title = '%%';
+    return this.movieRepository.find({
+      select: ['movieId', 'title', 'price', 'likes', 'stock'],
+      where: {
+        stock: isAvailable ? MoreThan(0) : LessThanOrEqual(0),
+        title: Like(title),
+      },
+      relations: ['tags'],
+    });
+  }
+
+  sortByTitle(movies: MovieDto[], isDesc: boolean) {
+    return movies.sort((movieA: Movie, movieB: Movie) => {
+      if (movieA.title > movieB.title) return isDesc ? -1 : 1;
+      if (movieA.title < movieB.title) return isDesc ? 1 : -1;
+      return 0;
+    });
+  }
+
+  sortByLikes(movies: MovieDto[], isDesc: boolean) {
+    return movies.sort((movieA, movieB) => {
+      if (movieA.likes > movieB.likes) return isDesc ? -1 : 1;
+      if (movieA.likes < movieB.likes) return isDesc ? 1 : -1;
+      return 0;
+    });
+  }
+
+  filterByTags(movies: MovieDto[], tags: any[]): MovieDto[] {
+    if (tags.length === 0) return movies;
+    return movies.filter((movie) => {
+      const movieTags = movie.tags.map((obj: Tag) => obj.title);
+      return tags.every((tag: string) => movieTags.includes(tag));
     });
   }
 
   async updateOne(id: number, updateMovieDto: PatchMovieDto): Promise<Movie> {
     try {
-      const movie = await this.movieRepository.preload({
+      const data = {
         movieId: id,
         ...updateMovieDto,
-        availability: updateMovieDto.stock <= 0 ? false : true,
-      });
+      };
+      if (updateMovieDto.stock) data.stock = Math.max(updateMovieDto.stock, 0);
+      const movie = await this.movieRepository.preload(data);
       return await this.movieRepository.save(movie);
     } catch (error) {
       throw new BadRequestException(
